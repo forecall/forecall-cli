@@ -6,7 +6,7 @@
 // it. Bundled apart (dist/sensor.js), the one hook that reaches the network.
 
 import { readFile } from "node:fs/promises";
-import { type Client, clientById, parseJson } from "./clients";
+import { type Client, clientById, homeDir, parseJson } from "./clients";
 import { looksFailed, otherMcpTool, readEvent } from "./event";
 import { EXIT, type Io } from "./io";
 import { argsShape, redactText } from "./redact";
@@ -93,11 +93,13 @@ export function resultText(response: unknown): string {
 /**
  * Where to send and with which key: the `forecall` entry of Claude Code's user-scope servers, its
  * URL's `/sensor` and its bearer key. Only https, or http to this machine (a local server).
+ * Nowhere without a home directory or CLAUDE_CONFIG_DIR: the file's path would be relative.
  */
 export async function sensorTarget(
   env: Io["env"],
   deps: Pick<SensorDeps, "platform" | "read">,
 ): Promise<{ url: string; key: string } | undefined> {
+  if (!env.CLAUDE_CONFIG_DIR && homeDir(env) === undefined) return undefined;
   const claudeCode = clientById("claude-code") as Client;
   const text = await deps.read(claudeCode.paths(env, deps.platform).servers);
   if (text === undefined) return undefined;
