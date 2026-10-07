@@ -2,8 +2,9 @@
 // clients on this machine to the Failure KB. Every change is to a client's own file (clients.ts),
 // made once and undone by --remove; the key is asked for, or taken from --key, and written into
 // those files only. Without a terminal and without --key, it says what to do and exits with 0,
-// so that a CI job that runs it by mistake does not fail. `--sensor` adds the sensor's hook too
-// never by default; `--remove --sensor` takes only that out.
+// so that a CI job that runs it by mistake does not fail. `--sensor` adds the sensor's hook too,
+// never by default; `--remove --sensor` takes only that out. Without a home directory it writes
+// nothing: every path would be relative to the working directory.
 import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
@@ -17,6 +18,7 @@ import {
   type ClientId,
   clientById,
   hasBlock,
+  homeDir,
   INSTRUCTIONS_BLOCK,
   parseJson,
   removeBlock,
@@ -178,6 +180,10 @@ export async function setup(
   if (parsed.help) {
     io.stdout(SETUP_HELP);
     return EXIT.ok;
+  }
+  if (homeDir(io.env) === undefined) {
+    io.stderr("forecall: cannot find your home directory: set HOME (USERPROFILE on Windows)\n");
+    return EXIT.error;
   }
   const targets =
     parsed.clients.length > 0

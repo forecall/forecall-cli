@@ -270,6 +270,39 @@ describe("forecall setup", () => {
     ).toBeDefined();
   });
 
+  it("treats an empty CLAUDE_CONFIG_DIR, HOME or APPDATA as unset", async () => {
+    const m = machine({ platform: "win32" });
+    m.io.env = { HOME: "", USERPROFILE: m.home, CLAUDE_CONFIG_DIR: "", APPDATA: "" };
+    expect(
+      await setup(
+        ["--key", KEY, "--no-hook", "--client", "claude-code", "--client", "claude-desktop"],
+        m.io,
+        m.deps,
+      ),
+    ).toBe(EXIT.ok);
+    expect(JSON.parse(await m.read(".claude.json")).mcpServers.forecall).toBeDefined();
+    expect(await m.read(".claude/CLAUDE.md")).toContain(BLOCK_START);
+    expect(m.out.stdout).toContain(join(m.home, ".claude", "CLAUDE.md"));
+    expect(
+      JSON.parse(await m.read("AppData/Roaming/Claude/claude_desktop_config.json")).mcpServers
+        .forecall,
+    ).toBeDefined();
+  });
+
+  it("writes nothing without a home directory", async () => {
+    const m = machine();
+    const written: string[] = [];
+    m.deps.write = async (file) => {
+      written.push(file);
+    };
+    m.io.env = { HOME: "", USERPROFILE: "", CLAUDE_CONFIG_DIR: "" };
+    expect(await setup(["--key", KEY, "--no-hook", "--client", "claude-code"], m.io, m.deps)).toBe(
+      EXIT.error,
+    );
+    expect(m.out.stderr).toContain("cannot find your home directory");
+    expect(written).toEqual([]);
+  });
+
   it.each<[string[], string]>([
     [["--client", "vim"], 'unknown client "vim"'],
     [["--hook", "--no-hook"], "--hook and --no-hook together"],

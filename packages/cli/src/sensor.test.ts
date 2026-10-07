@@ -14,7 +14,12 @@ const event = (tool_name: string, tool_response: unknown, tool_input: unknown = 
   JSON.stringify({ hook_event_name: "PostToolUse", tool_name, tool_input, tool_response });
 
 /** The sensor run on `input` with ~/.claude.json holding `claudeJson`; what it sent and printed. */
-async function run(input: string, claudeJson?: string, fail?: Error) {
+async function run(
+  input: string,
+  claudeJson?: string,
+  fail?: Error,
+  env: Io["env"] = { HOME: "/home/me" },
+) {
   const sent: { url: string; init: RequestInit }[] = [];
   const out = { stdout: "", stderr: "" };
   const io: Io = {
@@ -28,11 +33,13 @@ async function run(input: string, claudeJson?: string, fail?: Error) {
       out.stderr += text;
     },
     isTTY: false,
-    env: { HOME: "/home/me" },
+    env,
   };
   const deps: SensorDeps = {
     platform: "linux",
-    read: async (file) => (file === "/home/me/.claude.json" ? claudeJson : undefined),
+    // .claude.json in the working directory too, which a relative path would read.
+    read: async (file) =>
+      file === "/home/me/.claude.json" || file === ".claude.json" ? claudeJson : undefined,
     fetch: async (url, init) => {
       if (fail !== undefined) throw fail;
       sent.push({ url: String(url), init: init ?? {} });
@@ -108,6 +115,17 @@ describe("forecall hook --sensor", () => {
     ],
   ])("sends nothing for %s", async (_, input, claudeJson) => {
     const { code, sent, out } = await run(input, claudeJson);
+    expect(code).toBe(EXIT.ok);
+    expect(sent).toEqual([]);
+    expect(out).toEqual({ stdout: "", stderr: "" });
+  });
+
+  it("sends nothing without a home directory or CLAUDE_CONFIG_DIR", async () => {
+    const { code, sent, out } = await run(event("mcp__a__b", "Error: x"), config(ours), undefined, {
+      HOME: "",
+      USERPROFILE: "",
+      CLAUDE_CONFIG_DIR: "",
+    });
     expect(code).toBe(EXIT.ok);
     expect(sent).toEqual([]);
     expect(out).toEqual({ stdout: "", stderr: "" });

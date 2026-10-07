@@ -51,8 +51,16 @@ export interface Client {
   has(text: string): boolean;
 }
 
+/**
+ * The home directory, or undefined when there is none. An empty variable counts as unset: with
+ * `HOME=""`, every path below would be relative and land in the working directory.
+ */
+export function homeDir(env: Env): string | undefined {
+  return env.HOME || env.USERPROFILE || undefined;
+}
+
 function home(env: Env): string {
-  return env.HOME ?? env.USERPROFILE ?? "";
+  return homeDir(env) ?? "";
 }
 
 /** JSON parsed, or an error that names the file as unreadable. */
@@ -143,7 +151,8 @@ export const CLIENTS: readonly Client[] = [
     "claude-code",
     "Claude Code",
     (env) => {
-      const config = env.CLAUDE_CONFIG_DIR ?? join(home(env), ".claude");
+      // An empty CLAUDE_CONFIG_DIR counts as unset, like an empty HOME (homeDir).
+      const config = env.CLAUDE_CONFIG_DIR || join(home(env), ".claude");
       return {
         marker: config,
         // User-scope servers live in ~/.claude.json, beside the config directory.
@@ -162,7 +171,7 @@ export const CLIENTS: readonly Client[] = [
     (env, platform) => {
       const dir =
         platform === "win32"
-          ? join(env.APPDATA ?? join(home(env), "AppData", "Roaming"), "Claude")
+          ? join(env.APPDATA || join(home(env), "AppData", "Roaming"), "Claude")
           : platform === "darwin"
             ? join(home(env), "Library", "Application Support", "Claude")
             : join(home(env), ".config", "Claude");
