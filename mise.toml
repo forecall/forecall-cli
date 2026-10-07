@@ -1,0 +1,5 @@
+# Toolchain versions. CI reads the same file. Biome, TypeScript and Vitest are pinned in
+# package.json and pnpm-workspace.yaml.
+[tools]
+node = "24.21.0"
+pnpm = "12.8.1"

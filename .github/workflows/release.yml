@@ -1,0 +1,144 @@
+# Publishes one package to npm: `forecall` (packages/cli) or `@forecall/lint` (packages/lint).
+# - A maintainer runs it on main by hand (workflow_dispatch) and picks the package.
+# - It only stages the version (npm's staged publishing): the version goes live when a maintainer
+#   approves it with 2FA on npmjs.com or with `npm stage approve`. The Trusted Publisher allows
+#   `npm stage publish` only, so a stolen workflow run can at most leave a tarball awaiting
+#   approval.
+# - npm attaches provenance: anyone can check which commit and workflow built the tarball.
+# The package is built and tried in `build`, which has no OIDC token, and published in `publish`,
+# which runs no dependency code: only that job can mint the token npm's Trusted Publishing takes.
+# Actions are pinned to commit SHAs; the comment shows the release.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: The package to publish
+        type: choice
+        options: [cli, lint]
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      name: ${{ steps.package.outputs.name }}
+      version: ${{ steps.package.outputs.version }}
+      file: ${{ steps.pack.outputs.file }}
+    steps:
+      - name: Only from main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Run this workflow on main"
+          exit 1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        with:
+          install_args: node pnpm
+
+      # No dependency cache in a release build, so a poisoned cache cannot reach the package.
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm check
+
+      # npm answers E404 for a version it does not have; any other error fails the job.
+      - name: Check that the version is new
+        id: package
+        env:
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          name=$(node -p "require('./packages/$PACKAGE/package.json').name")
+          version=$(node -p "require('./packages/$PACKAGE/package.json').version")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if out=$(npm view "$name@$version" version 2>&1); then
+            echo "::error::$name@$version is already on npm. Raise the version in packages/$PACKAGE/package.json."
+            exit 1
+          elif ! grep -q E404 <<<"$out"; then
+            echo "$out"
+            exit 1
+          fi
+
+      - name: Pack
+        id: pack
+        env:
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          tarball=$(node "packages/$PACKAGE/pack.ts" "$RUNNER_TEMP/package")
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+          echo "file=$(basename "$tarball")" >> "$GITHUB_OUTPUT"
+
+      # Installs the tarball as users do and runs it on the oldest and the newest Node it supports.
+      - name: Try the package on Node 22 and 24
+        env:
+          PACKAGE: ${{ inputs.package }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: |
+          mise install node@22
+          scripts/try-package.sh "$PACKAGE" "$TARBALL"
+          mise exec node@22 -- scripts/try-package.sh "$PACKAGE" "$TARBALL"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: package
+          path: ${{ steps.pack.outputs.tarball }}
+          retention-days: 7
+
+  publish:
+    name: publish
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only main may use this environment. npm's Trusted Publisher names this workflow and
+    # environment; there are no secrets in it.
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/${{ needs.build.outputs.name }}
+    permissions:
+      contents: write # the tag <name>@<version>
+      id-token: write # npm's Trusted Publishing and the provenance (GitHub Actions OIDC)
+    env:
+      NAME: ${{ needs.build.outputs.name }}
+      VERSION: ${{ needs.build.outputs.version }}
+      FILE: ${{ needs.build.outputs.file }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Trusted Publishing needs npm 11.5.1 or later and staged publishing 11.15.0 or later;
+      # Node 24.21.0 (mise.toml) ships 11.19.0.
+      - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        with:
+          install_args: node
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: package
+          path: ${{ runner.temp }}/package
+
+      # No token: npm exchanges the job's OIDC token. The version waits in npm's staging area until
+      # a maintainer approves it with 2FA.
+      - name: Stage
+        run: npm stage publish "$RUNNER_TEMP/package/$FILE" --access public --provenance
+
+      # The tag marks the commit the staged tarball came from. If the version is rejected instead
+      # of approved, delete the tag: git push origin ":refs/tags/<name>@<version>".
+      - name: Tag the staged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$NAME@$VERSION" -f "sha=$GITHUB_SHA"

@@ -1,0 +1,15 @@
+{
+  // What goes to npm: the shipped code as JavaScript with .js imports, and its types, in dist/.
+  // Not the tests, the fixtures or the build scripts.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["*.ts"],
+  "exclude": ["*.test.ts", "pack.ts"]
+}

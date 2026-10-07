@@ -1,0 +1,17 @@
+packages:
+  - packages/*
+
+# Versions shared by both packages. Packages reference them as "catalog:".
+catalog:
+  "@types/node": 24.19.0
+  typescript: 7.0.2
+  vitest: 5.0.2
+
+engineStrict: true
+saveExact: true
+# Do not resolve versions published less than a day ago.
+minimumReleaseAge: 1440
+# Dependency build scripts, which pnpm blocks until reviewed. esbuild only checks its binary in
+# postinstall and finds it through its platform package anyway, so it is not run.
+allowBuilds:
+  esbuild: false

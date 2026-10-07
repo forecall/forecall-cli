@@ -1,0 +1,23 @@
+{
+  "no_description": "No description.",
+  "restates_name": "The description only restates the name ({words} words).",
+  "too_short": "The description is too short ({words} words).",
+  "too_long": "The description is long ({words} words). It helps selection but costs steps and tokens.",
+  "no_usage_context": "Says nothing about when to use it, or when not to.",
+  "param_no_description": "Arguments without a description: {params}.",
+  "loose_string_param": "String arguments with no constraint or example: {params}.",
+  "no_required": "No `required` list, so every argument is optional.",
+  "params_not_in_description": "The description mentions none of its 3 or more arguments.",
+  "vague_boolean": "The meaning of the boolean argument {param} is unclear.",
+  "no_return_info": "Says nothing about what it returns.",
+  "no_constraints": "No constraints, side effects, auth or rate limits described, and no annotations.",
+  "destructive_unmarked": "It may be destructive, but destructiveHint is not set.",
+  "generic_name": "The name is made of generic words only.",
+  "long_name": "The name is long ({length} characters).",
+  "bad_name_chars": "The name contains characters other than letters, digits, _, - and .",
+  "too_many_tools": "{count} tools. Above 40, models choose less accurately.",
+  "many_tools": "{count} tools. Above 25, models start to tell tools apart less well.",
+  "confusable_pair": "{a} and {b} are easy to mix up.",
+  "confusable_pair_total": "{total} confusable pairs in all; the top 12 are shown.",
+  "identical_description": "These tools share the same description: {tools}."
+}

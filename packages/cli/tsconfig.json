@@ -1,0 +1,7 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // build.ts runs on Node as it is (type stripping), so relative imports name the .ts file.
+  "compilerOptions": { "allowImportingTsExtensions": true, "types": ["node"] },
+  "include": ["**/*.ts"],
+  "exclude": ["dist"]
+}

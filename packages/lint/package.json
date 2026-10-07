@@ -1,0 +1,45 @@
+{
+  "name": "@forecall/lint",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Score the tool descriptions of an MCP tools/list for the AI agents that read them.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "lint",
+    "tools",
+    "ai-agents"
+  ],
+  "homepage": "https://forecall.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forecall/forecall-cli.git",
+    "directory": "packages/lint"
+  },
+  "bugs": "https://github.com/forecall/forecall-cli/issues",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./internal/codes": "./codes.ts",
+    "./internal/diff": "./diff.ts",
+    "./internal/lint": "./lint.ts",
+    "./internal/messages": "./messages.ts",
+    "./internal/round": "./round.ts",
+    "./internal/score-tool": "./score-tool.ts",
+    "./internal/tools-list": "./tools-list.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc && tsc -p tsconfig.lib.json",
+    "test": "vitest run",
+    "pack": "node pack.ts"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

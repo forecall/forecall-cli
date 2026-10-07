@@ -1,0 +1,23 @@
+{
+  "no_description": "説明文がありません。",
+  "restates_name": "説明文が名前の言い換えになっています（{words} 語）。",
+  "too_short": "説明文が短すぎます（{words} 語）。",
+  "too_long": "説明文が長めです（{words} 語）。選択の精度は上がりますが、手数とトークンが増えます。",
+  "no_usage_context": "いつ使うか、いつ使わないかが書かれていません。",
+  "param_no_description": "説明のない引数: {params}",
+  "loose_string_param": "制約も例もない文字列の引数: {params}",
+  "no_required": "`required` が指定されていないため、すべての引数が任意になっています。",
+  "params_not_in_description": "引数が 3 つ以上あるのに、説明文がどの引数にも触れていません。",
+  "vague_boolean": "真偽値の引数 {param} の意味が分かりにくくなっています。",
+  "no_return_info": "何が返るかが書かれていません。",
+  "no_constraints": "制約・副作用・認証・回数制限の記述がなく、annotations もありません。",
+  "destructive_unmarked": "破壊的な操作の可能性がありますが、destructiveHint が付いていません。",
+  "generic_name": "名前が汎用的な語だけでできています。",
+  "long_name": "名前が長すぎます（{length} 文字）。",
+  "bad_name_chars": "名前に、英数字と _、-、. 以外の文字が含まれています。",
+  "too_many_tools": "ツールが {count} 個あります。40 を超えると、モデルの選択の精度が落ちます。",
+  "many_tools": "ツールが {count} 個あります。25 を超えると、モデルがツールを見分けにくくなり始めます。",
+  "confusable_pair": "{a} と {b} は取り違えやすい組です。",
+  "confusable_pair_total": "取り違えやすい組は全部で {total} 組あります（上位 12 組を表示）。",
+  "identical_description": "次のツールの説明文がまったく同じです: {tools}"
+}

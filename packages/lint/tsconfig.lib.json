@@ -1,0 +1,7 @@
+{
+  // The shipped code only, without the tests (whose Vitest types load Node's). The linter also runs
+  // on Cloudflare Workers and in browsers, so it must not use Node-only APIs.
+  "extends": "../../tsconfig.base.json",
+  "include": ["*.ts"],
+  "exclude": ["*.test.ts", "pack.ts", "dist"]
+}

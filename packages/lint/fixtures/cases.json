@@ -1,0 +1,789 @@
+{
+  "$comment": [
+    "Made-up tools and servers, with the results of the Python prototype the linter was ported from.",
+    "tools[].expected is scoreTool's result, with the issues as sorted severity:code.",
+    "servers[].expected.serverIssues are the prototype's [severity, code, detail]: detail is the count,",
+    "the pair with its two similarities, the total, or how many tools share a description.",
+    "A new LINT_VERSION may change these results; update them in the same pull request."
+  ],
+  "tools": [
+    {
+      "tool": {
+        "name": "get_data",
+        "description": ""
+      },
+      "expected": {
+        "name": "get_data",
+        "score": 20,
+        "components": {
+          "purpose": 0,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": ["critical:no_description", "major:generic_name"],
+        "words": 0,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "fetch_page",
+        "description": " 　\t "
+      },
+      "expected": {
+        "name": "fetch_page",
+        "score": 20,
+        "components": {
+          "purpose": 0,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": [
+          "critical:no_description",
+          "major:no_usage_context",
+          "minor:no_constraints",
+          "minor:no_return_info"
+        ],
+        "words": 0,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "separators",
+        "description": "\u001c\u001f"
+      },
+      "expected": {
+        "name": "separators",
+        "score": 20,
+        "components": {
+          "purpose": 0,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": [
+          "critical:no_description",
+          "major:no_usage_context",
+          "minor:no_constraints",
+          "minor:no_return_info"
+        ],
+        "words": 0,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "bom",
+        "description": "﻿"
+      },
+      "expected": {
+        "name": "bom",
+        "score": 30,
+        "components": {
+          "purpose": 10,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": ["major:no_usage_context", "minor:no_constraints", "minor:no_return_info"],
+        "words": 0,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "list_users",
+        "description": "List users."
+      },
+      "expected": {
+        "name": "list_users",
+        "score": 26,
+        "components": {
+          "purpose": 6,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": [
+          "major:no_usage_context",
+          "major:restates_name",
+          "major:too_short",
+          "minor:no_constraints",
+          "minor:no_return_info"
+        ],
+        "words": 2,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "delete_page",
+        "description": "Permanently delete one page by its id.",
+        "inputSchema": {
+          "type": "object"
+        }
+      },
+      "expected": {
+        "name": "delete_page",
+        "score": 31,
+        "components": {
+          "purpose": 6,
+          "usageContext": 0,
+          "parameters": 25,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": [
+          "major:destructive_unmarked",
+          "major:no_usage_context",
+          "major:restates_name",
+          "major:too_short",
+          "minor:no_constraints",
+          "minor:no_return_info"
+        ],
+        "words": 7,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "remove_tag",
+        "description": "Removes a tag.",
+        "annotations": {
+          "destructiveHint": false
+        }
+      },
+      "expected": {
+        "name": "remove_tag",
+        "score": 33,
+        "components": {
+          "purpose": 6,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 7,
+          "examples": 0
+        },
+        "issues": [
+          "major:no_usage_context",
+          "major:restates_name",
+          "major:too_short",
+          "minor:no_return_info"
+        ],
+        "words": 3,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "search.docs 📍 tool",
+        "description": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word",
+        "inputSchema": {
+          "type": "array"
+        }
+      },
+      "expected": {
+        "name": "search.docs 📍 tool",
+        "score": 37,
+        "components": {
+          "purpose": 17,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": [
+          "major:bad_name_chars",
+          "major:no_usage_context",
+          "minor:no_constraints",
+          "minor:no_return_info",
+          "minor:too_long"
+        ],
+        "words": 401,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "description": "Get items—when needed. Returns éwhen data."
+      },
+      "expected": {
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "score": 45,
+        "components": {
+          "purpose": 13,
+          "usageContext": 5,
+          "parameters": 20,
+          "return": 7,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": ["major:too_short", "minor:long_name", "minor:no_constraints"],
+        "words": 7,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "summarize",
+        "description": "Use this to summarize. Use the fetch tool instead for URLs."
+      },
+      "expected": {
+        "name": "summarize",
+        "score": 48,
+        "components": {
+          "purpose": 13,
+          "usageContext": 15,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": ["minor:no_constraints", "minor:no_return_info"],
+        "words": 11,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "summarize_2",
+        "description": "Summarize text; use the reader\ninstead."
+      },
+      "expected": {
+        "name": "summarize_2",
+        "score": 31,
+        "components": {
+          "purpose": 6,
+          "usageContext": 5,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": [
+          "major:restates_name",
+          "major:too_short",
+          "minor:no_constraints",
+          "minor:no_return_info"
+        ],
+        "words": 6,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "throttle",
+        "description": "Checks the rate\rlimit and whenを handling rather than retrying."
+      },
+      "expected": {
+        "name": "throttle",
+        "score": 38,
+        "components": {
+          "purpose": 10,
+          "usageContext": 5,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 3,
+          "examples": 0
+        },
+        "issues": ["minor:no_return_info"],
+        "words": 10,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "quote",
+        "description": "Prints '📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍' or '📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍📍'."
+      },
+      "expected": {
+        "name": "quote",
+        "score": 35,
+        "components": {
+          "purpose": 10,
+          "usageContext": 0,
+          "parameters": 20,
+          "return": 0,
+          "constraints": 0,
+          "examples": 5
+        },
+        "issues": [
+          "major:no_usage_context",
+          "major:too_short",
+          "minor:no_constraints",
+          "minor:no_return_info"
+        ],
+        "words": 2,
+        "paramCount": 0
+      }
+    },
+    {
+      "tool": {
+        "name": "query_records",
+        "description": "Query records by id. Returns rows, e.g. `abc`.",
+        "outputSchema": {},
+        "annotations": {
+          "readOnlyHint": true,
+          "title": "Query"
+        },
+        "inputSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "a": {
+              "type": "string",
+              "description": "The first value"
+            },
+            "b": {
+              "type": "string",
+              "enum": ["x", "y"]
+            },
+            "c": {
+              "type": "boolean",
+              "description": ""
+            },
+            "d": {
+              "type": "boolean",
+              "description": "Whether to include deleted rows"
+            }
+          }
+        }
+      },
+      "expected": {
+        "name": "query_records",
+        "score": 37,
+        "components": {
+          "purpose": 6,
+          "usageContext": 0,
+          "parameters": 12,
+          "return": 7,
+          "constraints": 7,
+          "examples": 5
+        },
+        "issues": [
+          "major:no_usage_context",
+          "major:restates_name",
+          "minor:loose_string_param",
+          "minor:no_required",
+          "minor:param_no_description",
+          "minor:params_not_in_description",
+          "minor:vague_boolean"
+        ],
+        "words": 9,
+        "paramCount": 4
+      }
+    },
+    {
+      "tool": {
+        "name": "nested",
+        "description": "Create a record with nested fields such as owner and tags.",
+        "outputSchema": {
+          "type": "object"
+        },
+        "inputSchema": {
+          "type": "object",
+          "required": ["owner"],
+          "properties": {
+            "owner": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "mode": {
+              "examples": ["fast"]
+            }
+          },
+          "anyOf": [
+            {
+              "properties": {
+                "alt": {
+                  "type": "string",
+                  "description": "e.g. 'abc'"
+                }
+              }
+            }
+          ],
+          "oneOf": [
+            {
+              "properties": {
+                "one": {
+                  "type": "integer"
+                }
+              }
+            }
+          ],
+          "allOf": [
+            {
+              "properties": {
+                "all": {
+                  "type": "number",
+                  "description": "A number"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "name": "nested",
+        "score": 40,
+        "components": {
+          "purpose": 13,
+          "usageContext": 0,
+          "parameters": 9,
+          "return": 8,
+          "constraints": 0,
+          "examples": 10
+        },
+        "issues": [
+          "major:no_usage_context",
+          "major:param_no_description",
+          "minor:loose_string_param",
+          "minor:no_constraints"
+        ],
+        "words": 11,
+        "paramCount": 8
+      }
+    },
+    {
+      "tool": {
+        "name": "branches_only",
+        "description": "Update something.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "anyOf": [
+            {
+              "properties": {
+                "p": {}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "name": "branches_only",
+        "score": 21,
+        "components": {
+          "purpose": 13,
+          "usageContext": 0,
+          "parameters": 8,
+          "return": 0,
+          "constraints": 0,
+          "examples": 0
+        },
+        "issues": [
+          "major:no_usage_context",
+          "major:param_no_description",
+          "major:too_short",
+          "minor:no_constraints",
+          "minor:no_return_info"
+        ],
+        "words": 2,
+        "paramCount": 1
+      }
+    }
+  ],
+  "servers": [
+    {
+      "name": "too_many_tools",
+      "tools": [
+        {
+          "name": "t0",
+          "description": "Tool number 0 handles alpha0 beta0."
+        },
+        {
+          "name": "t1",
+          "description": "Tool number 1 handles alpha1 beta1."
+        },
+        {
+          "name": "t2",
+          "description": "Tool number 2 handles alpha2 beta2."
+        },
+        {
+          "name": "t3",
+          "description": "Tool number 3 handles alpha3 beta3."
+        },
+        {
+          "name": "t4",
+          "description": "Tool number 4 handles alpha4 beta4."
+        },
+        {
+          "name": "t5",
+          "description": "Tool number 5 handles alpha5 beta5."
+        },
+        {
+          "name": "t6",
+          "description": "Tool number 6 handles alpha6 beta6."
+        },
+        {
+          "name": "t7",
+          "description": "Tool number 7 handles alpha7 beta7."
+        },
+        {
+          "name": "t8",
+          "description": "Tool number 8 handles alpha8 beta8."
+        },
+        {
+          "name": "t9",
+          "description": "Tool number 9 handles alpha9 beta9."
+        },
+        {
+          "name": "t10",
+          "description": "Tool number 10 handles alpha10 beta10."
+        },
+        {
+          "name": "t11",
+          "description": "Tool number 11 handles alpha11 beta11."
+        },
+        {
+          "name": "t12",
+          "description": "Tool number 12 handles alpha12 beta12."
+        },
+        {
+          "name": "t13",
+          "description": "Tool number 13 handles alpha13 beta13."
+        },
+        {
+          "name": "t14",
+          "description": "Tool number 14 handles alpha14 beta14."
+        },
+        {
+          "name": "t15",
+          "description": "Tool number 15 handles alpha15 beta15."
+        },
+        {
+          "name": "t16",
+          "description": "Tool number 16 handles alpha16 beta16."
+        },
+        {
+          "name": "t17",
+          "description": "Tool number 17 handles alpha17 beta17."
+        },
+        {
+          "name": "t18",
+          "description": "Tool number 18 handles alpha18 beta18."
+        },
+        {
+          "name": "t19",
+          "description": "Tool number 19 handles alpha19 beta19."
+        },
+        {
+          "name": "t20",
+          "description": "Tool number 20 handles alpha20 beta20."
+        },
+        {
+          "name": "t21",
+          "description": "Tool number 21 handles alpha21 beta21."
+        },
+        {
+          "name": "t22",
+          "description": "Tool number 22 handles alpha22 beta22."
+        },
+        {
+          "name": "t23",
+          "description": "Tool number 23 handles alpha23 beta23."
+        },
+        {
+          "name": "t24",
+          "description": "Tool number 24 handles alpha24 beta24."
+        },
+        {
+          "name": "t25",
+          "description": "Tool number 25 handles alpha25 beta25."
+        },
+        {
+          "name": "t26",
+          "description": "Tool number 26 handles alpha26 beta26."
+        },
+        {
+          "name": "t27",
+          "description": "Tool number 27 handles alpha27 beta27."
+        },
+        {
+          "name": "t28",
+          "description": "Tool number 28 handles alpha28 beta28."
+        },
+        {
+          "name": "t29",
+          "description": "Tool number 29 handles alpha29 beta29."
+        },
+        {
+          "name": "t30",
+          "description": "Tool number 30 handles alpha30 beta30."
+        },
+        {
+          "name": "t31",
+          "description": "Tool number 31 handles alpha31 beta31."
+        },
+        {
+          "name": "t32",
+          "description": "Tool number 32 handles alpha32 beta32."
+        },
+        {
+          "name": "t33",
+          "description": "Tool number 33 handles alpha33 beta33."
+        },
+        {
+          "name": "t34",
+          "description": "Tool number 34 handles alpha34 beta34."
+        },
+        {
+          "name": "t35",
+          "description": "Tool number 35 handles alpha35 beta35."
+        },
+        {
+          "name": "same_1",
+          "description": "Returns the shared record for the caller."
+        },
+        {
+          "name": "same_2",
+          "description": "  Returns the shared record for the caller.\n"
+        },
+        {
+          "name": "same_3",
+          "description": "Returns the shared record for the caller."
+        },
+        {
+          "name": "empty_1",
+          "description": ""
+        },
+        {
+          "name": "empty_2",
+          "description": " "
+        }
+      ],
+      "expected": {
+        "toolCount": 41,
+        "scoreAvg": 30,
+        "confusablePairsTotal": 3,
+        "serverIssues": [
+          ["major", "too_many_tools", 41],
+          ["major", "confusable_pair", ["same_1", "same_2", 1, 0.33]],
+          ["major", "confusable_pair", ["same_1", "same_3", 1, 0.33]],
+          ["major", "confusable_pair", ["same_2", "same_3", 1, 0.33]],
+          ["critical", "identical_description", 3]
+        ]
+      }
+    },
+    {
+      "name": "name_similarity",
+      "tools": [
+        {
+          "name": "user_get",
+          "description": "Fetch user record from directory service."
+        },
+        {
+          "name": "get_user",
+          "description": "Fetch user record into account store."
+        },
+        {
+          "name": "getUser",
+          "description": "Fetch user record for billing team."
+        }
+      ],
+      "expected": {
+        "toolCount": 3,
+        "scoreAvg": 28.3,
+        "confusablePairsTotal": 1,
+        "serverIssues": [["major", "confusable_pair", ["user_get", "get_user", 0.43, 1]]]
+      }
+    },
+    {
+      "name": "duplicate_names",
+      "tools": [
+        {
+          "name": "dup",
+          "description": "Alpha beta gamma delta."
+        },
+        {
+          "name": "dup",
+          "description": "Epsilon zeta theta iota."
+        },
+        {
+          "name": "other",
+          "description": "Alpha beta gamma delta."
+        }
+      ],
+      "expected": {
+        "toolCount": 3,
+        "scoreAvg": 30,
+        "confusablePairsTotal": 1,
+        "serverIssues": [
+          ["major", "confusable_pair", ["dup", "dup", 1, 1]],
+          ["critical", "identical_description", 2]
+        ]
+      }
+    },
+    {
+      "name": "average_tie",
+      "tools": [
+        {
+          "name": "get_data",
+          "description": ""
+        },
+        {
+          "name": "fetch_page",
+          "description": " 　\t "
+        },
+        {
+          "name": "list_users",
+          "description": "List users."
+        },
+        {
+          "name": "delete_page",
+          "description": "Permanently delete one page by its id.",
+          "inputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "expected": {
+        "toolCount": 4,
+        "scoreAvg": 24.2,
+        "confusablePairsTotal": 0,
+        "serverIssues": []
+      }
+    },
+    {
+      "name": "empty",
+      "tools": [],
+      "expected": {
+        "toolCount": 0,
+        "scoreAvg": 0,
+        "confusablePairsTotal": 0,
+        "serverIssues": []
+      }
+    }
+  ]
+}
