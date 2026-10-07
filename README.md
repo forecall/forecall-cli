@@ -38,8 +38,10 @@ pnpm check       # Biome, the type checks and the tests of both packages
 
 ## Releases
 
-Maintainers run the Release workflow on `main` and pick the package. The workflow stages the
-version on npm with provenance, and it goes live only when a maintainer approves it with 2FA.
+A pull request that raises a package's version starts the Release workflow when it lands on
+`main`. The workflow stages every version npm does not have yet (`@forecall/lint` first) with
+provenance, and each goes live only when a maintainer approves it on npm with 2FA. Maintainers can
+also run the workflow by hand on `main` and pick one package.
 
 ## Contributing and security
 

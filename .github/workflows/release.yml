@@ -1,16 +1,24 @@
-# Publishes one package to npm: `forecall` (packages/cli) or `@forecall/lint` (packages/lint).
-# - A maintainer runs it on main by hand (workflow_dispatch) and picks the package.
+# Publishes `forecall` (packages/cli) and `@forecall/lint` (packages/lint) to npm.
+# - A push to main that raises a package's version (or changes this workflow) stages every package
+#   whose version npm does not have yet, @forecall/lint first. A maintainer can also run it by hand
+#   on main (workflow_dispatch) and pick one package.
 # - It only stages the version (npm's staged publishing): the version goes live when a maintainer
 #   approves it with 2FA on npmjs.com or with `npm stage approve`. The Trusted Publisher allows
 #   `npm stage publish` only, so a stolen workflow run can at most leave a tarball awaiting
 #   approval.
 # - npm attaches provenance: anyone can check which commit and workflow built the tarball.
-# The package is built and tried in `build`, which has no OIDC token, and published in `publish`,
+# The packages are built and tried in `build`, which has no OIDC token, and published in `publish`,
 # which runs no dependency code: only that job can mint the token npm's Trusted Publishing takes.
 # Actions are pinned to commit SHAs; the comment shows the release.
 name: Release
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - packages/cli/package.json
+      - packages/lint/package.json
+      - .github/workflows/release.yml
   workflow_dispatch:
     inputs:
       package:
@@ -27,14 +35,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: build
+  # Which packages to stage: the one picked by hand, or each whose version npm does not have.
+  plan:
+    name: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     outputs:
-      name: ${{ steps.package.outputs.name }}
-      version: ${{ steps.package.outputs.version }}
-      file: ${{ steps.pack.outputs.file }}
+      packages: ${{ steps.plan.outputs.packages }}
     steps:
       - name: Only from main
         if: github.ref != 'refs/heads/main'
@@ -48,6 +55,50 @@ jobs:
 
       - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
+          install_args: node
+
+      # npm answers E404 for a version it does not have; any other error fails the job.
+      - name: Find the versions npm does not have
+        id: plan
+        env:
+          PICKED: ${{ inputs.package }}
+        run: |
+          if [ -n "$PICKED" ]; then
+            echo "packages=[\"$PICKED\"]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          packages=""
+          for package in lint cli; do
+            name=$(node -p "require('./packages/$package/package.json').name")
+            version=$(node -p "require('./packages/$package/package.json').version")
+            if out=$(npm view "$name@$version" version 2>&1); then
+              echo "$name@$version is on npm"
+            elif grep -q E404 <<<"$out"; then
+              echo "$name@$version is new"
+              packages="$packages${packages:+,}\"$package\""
+            else
+              echo "$out"
+              exit 1
+            fi
+          done
+          echo "packages=[$packages]" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: build
+    needs: plan
+    if: needs.plan.outputs.packages != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.plan.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        with:
           install_args: node pnpm
 
       # No dependency cache in a release build, so a poisoned cache cannot reach the package.
@@ -55,16 +106,12 @@ jobs:
 
       - run: pnpm check
 
-      # npm answers E404 for a version it does not have; any other error fails the job.
       - name: Check that the version is new
-        id: package
         env:
-          PACKAGE: ${{ inputs.package }}
+          PACKAGE: ${{ matrix.package }}
         run: |
           name=$(node -p "require('./packages/$PACKAGE/package.json').name")
           version=$(node -p "require('./packages/$PACKAGE/package.json').version")
-          echo "name=$name" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
           if out=$(npm view "$name@$version" version 2>&1); then
             echo "::error::$name@$version is already on npm. Raise the version in packages/$PACKAGE/package.json."
             exit 1
@@ -76,16 +123,13 @@ jobs:
       - name: Pack
         id: pack
         env:
-          PACKAGE: ${{ inputs.package }}
-        run: |
-          tarball=$(node "packages/$PACKAGE/pack.ts" "$RUNNER_TEMP/package")
-          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
-          echo "file=$(basename "$tarball")" >> "$GITHUB_OUTPUT"
+          PACKAGE: ${{ matrix.package }}
+        run: echo "tarball=$(node "packages/$PACKAGE/pack.ts" "$RUNNER_TEMP/package")" >> "$GITHUB_OUTPUT"
 
       # Installs the tarball as users do and runs it on the oldest and the newest Node it supports.
       - name: Try the package on Node 22 and 24
         env:
-          PACKAGE: ${{ inputs.package }}
+          PACKAGE: ${{ matrix.package }}
           TARBALL: ${{ steps.pack.outputs.tarball }}
         run: |
           mise install node@22
@@ -94,27 +138,31 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: package
+          name: package-${{ matrix.package }}
           path: ${{ steps.pack.outputs.tarball }}
           retention-days: 7
 
   publish:
     name: publish
-    needs: build
+    needs: [plan, build]
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      # @forecall/lint before forecall, one at a time.
+      max-parallel: 1
+      matrix:
+        package: ${{ fromJSON(needs.plan.outputs.packages) }}
     # Only main may use this environment. npm's Trusted Publisher names this workflow and
-    # environment; there are no secrets in it.
+    # environment. Its one optional secret, SLACK_WEBHOOK_URL, says a version awaits approval.
     environment:
       name: npm
-      url: https://www.npmjs.com/package/${{ needs.build.outputs.name }}
+      url: https://www.npmjs.com/package/${{ matrix.package == 'lint' && '@forecall/lint' || 'forecall' }}
     permissions:
       contents: write # the tag <name>@<version>
       id-token: write # npm's Trusted Publishing and the provenance (GitHub Actions OIDC)
     env:
-      NAME: ${{ needs.build.outputs.name }}
-      VERSION: ${{ needs.build.outputs.version }}
-      FILE: ${{ needs.build.outputs.file }}
+      PACKAGE: ${{ matrix.package }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -128,12 +176,21 @@ jobs:
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: package
+          name: package-${{ matrix.package }}
           path: ${{ runner.temp }}/package
+
+      - name: Name the package
+        id: package
+        run: |
+          echo "name=$(node -p "require('./packages/$PACKAGE/package.json').name")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./packages/$PACKAGE/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "file=$(ls "$RUNNER_TEMP/package")" >> "$GITHUB_OUTPUT"
 
       # No token: npm exchanges the job's OIDC token. The version waits in npm's staging area until
       # a maintainer approves it with 2FA.
       - name: Stage
+        env:
+          FILE: ${{ steps.package.outputs.file }}
         run: npm stage publish "$RUNNER_TEMP/package/$FILE" --access public --provenance
 
       # The tag marks the commit the staged tarball came from. If the version is rejected instead
@@ -141,4 +198,20 @@ jobs:
       - name: Tag the staged commit
         env:
           GH_TOKEN: ${{ github.token }}
+          NAME: ${{ steps.package.outputs.name }}
+          VERSION: ${{ steps.package.outputs.version }}
         run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$NAME@$VERSION" -f "sha=$GITHUB_SHA"
+
+      # Optional, and never fails the job: the version is staged either way.
+      - name: Tell Slack the version awaits approval
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          NAME: ${{ steps.package.outputs.name }}
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          body=$(node -e '
+            const { NAME, VERSION } = process.env;
+            const text = `npm の承認待ち: ${NAME}@${VERSION}（npmjs.com の Staged Packages か npm stage approve で承認する。2FA）\nhttps://www.npmjs.com/package/${NAME}`;
+            console.log(JSON.stringify({ text }));
+          ')
+          curl -fsS -X POST -H "Content-Type: application/json" --data "$body" "$SLACK_WEBHOOK_URL" > /dev/null || echo "::warning::Slack did not take the message"

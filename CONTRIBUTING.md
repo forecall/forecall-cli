@@ -18,6 +18,7 @@ Thank you for helping. Issues and pull requests are welcome in English or Japane
    also packs both packages and tries them on Node.js 22 and 24.
 4. Write the title as a [Conventional Commit](https://www.conventionalcommits.org/), such as
    `fix(lint): ...` or `feat(cli): ...`. Pull requests are squash-merged into `main`.
+5. Leave the packages' versions to the maintainers: a version raised on `main` starts a release.
 
 ### Changing the scoring rules
 
