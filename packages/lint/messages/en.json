@@ -17,7 +17,7 @@
   "bad_name_chars": "The name contains characters other than letters, digits, _, - and .",
   "too_many_tools": "{count} tools. Above 40, models choose less accurately.",
   "many_tools": "{count} tools. Above 25, models start to tell tools apart less well.",
-  "confusable_pair": "{a} and {b} are easy to mix up.",
+  "confusable_pair": "{a} and {b} are easy to mix up. In each description, say when to use the other one instead.",
   "confusable_pair_total": "{total} confusable pairs in all; the top 12 are shown.",
   "identical_description": "These tools share the same description: {tools}."
 }

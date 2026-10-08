@@ -61,7 +61,7 @@ describe("formatReport", () => {
 
   it("shows the pair's similarities under it", () => {
     expect(text).toContain(
-      "  Major     confusable_pair  a_tool and b_tool are easy to mix up.\n" +
+      "  Major     confusable_pair  a_tool and b_tool are easy to mix up. In each description, say when to use the other one instead.\n" +
         "                             Description similarity 0.80 · Name similarity 0.50\n",
     );
   });

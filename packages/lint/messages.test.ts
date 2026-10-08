@@ -68,8 +68,11 @@ describe("issueMessage", () => {
     expect(issueMessage("en", identical)).toBe("These tools share the same description: p, q.");
   });
 
-  it("names both tools of a confusable pair", () => {
-    expect(issueMessage("en", ISSUES[18] as ServerIssue)).toBe("x and y are easy to mix up.");
+  // A pointer to the other tool in each description tells them apart (#7).
+  it("names both tools of a confusable pair, and asks each to point to the other", () => {
+    expect(issueMessage("en", ISSUES[18] as ServerIssue)).toBe(
+      "x and y are easy to mix up. In each description, say when to use the other one instead.",
+    );
   });
 
   it("says one word or several, as each language does", () => {
