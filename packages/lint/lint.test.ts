@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import cases from "./fixtures/cases.json";
 import { LINT_VERSION, type LintReport, lintTools, type ServerIssue } from "./lint.ts";
+import { words } from "./text.ts";
 import type { Tool } from "./tool.ts";
 import { parseToolsList, readToolsList } from "./tools-list.ts";
 
@@ -20,8 +21,15 @@ function asPrototype(report: LintReport) {
         return issue.total;
       case "identical_description":
         return issue.tools.length;
-      default:
+      case "too_many_tools":
+      case "many_tools":
         return issue.count;
+      case "repeated_note":
+        return [issue.tools, issue.words];
+      case "instructions_long":
+        return issue.length;
+      default:
+        return undefined;
     }
   };
   return {
@@ -71,6 +79,90 @@ describe("confusable pairs", () => {
     const report = lintTools(lookalikes(5));
     expect(report.confusablePairsTotal).toBe(10);
     expect(report.serverIssues.map((issue) => issue.code)).not.toContain("confusable_pair_total");
+  });
+});
+
+/** A note of some forty words that a server author pasted into every tool (forecall-cli#12). */
+const NOTE =
+  "Important: this server only reaches the archive of the Northwind company, which holds its invoices, customers, orders and shipments from 2015 on. It does not search the public web, other companies, or anything outside that archive.";
+
+/** Seven tools that say one thing each, with or without the note after it. */
+function archiveTools(withNote: boolean): Tool[] {
+  const own = [
+    ["get_invoice", "Fetch one invoice by its id and return it as JSON."],
+    ["get_customer", "Fetch one customer by its id and return it as JSON."],
+    ["get_order", "Fetch one order by its id and return it as JSON."],
+    ["get_shipment", "Fetch one shipment by its id and return it as JSON."],
+    ["list_invoices", "List the invoices of a customer, newest first, up to 50."],
+    ["list_orders", "List the orders of a customer, newest first, up to 50."],
+    ["search_archive", "Search the archive by free text and return matching ids."],
+  ];
+  return own.map(([name, description]) => ({
+    name: name as string,
+    description: withNote ? `${description} ${NOTE}` : description,
+  }));
+}
+
+describe("scoring rules v2: a note repeated in most tools (forecall-cli#12)", () => {
+  it("scores and compares each tool on what it alone says, and reports the note once", () => {
+    const withNote = lintTools(archiveTools(true));
+    const without = lintTools(archiveTools(false));
+    expect(withNote.tools).toEqual(without.tools);
+    expect(withNote.scoreAvg).toBe(without.scoreAvg);
+    expect(withNote.confusablePairsTotal).toBe(without.confusablePairsTotal);
+    expect(without.serverIssues.map((issue) => issue.code)).not.toContain("repeated_note");
+    expect(withNote.serverIssues).toContainEqual({
+      severity: "major",
+      code: "repeated_note",
+      tools: 7,
+      words: words(NOTE).length,
+      excerpt: `${NOTE.slice(0, 79)}…`,
+    });
+  });
+
+  it("leaves a short shared sentence in place, where it still counts in every tool", () => {
+    const short = "Only works within allowed directories.";
+    const tools = archiveTools(false).map((tool) => ({
+      ...tool,
+      description: `${tool.description} ${short}`,
+    }));
+    const report = lintTools(tools);
+    expect(report.serverIssues.map((issue) => issue.code)).not.toContain("repeated_note");
+    const own = lintTools(archiveTools(false));
+    for (const [i, tool] of report.tools.entries()) {
+      expect(tool.words).toBe((own.tools[i]?.words ?? 0) + words(short).length);
+    }
+  });
+});
+
+describe("the server's instructions (forecall-cli#12)", () => {
+  const tools = archiveTools(false);
+  const about = (report: LintReport) =>
+    report.serverIssues
+      .map((issue) => issue.code)
+      .filter((code) => code.startsWith("instructions_"));
+  const codes = (instructions: string | undefined) =>
+    about(lintTools(tools, { handshake: { instructions } }));
+
+  it("says nothing about them without the handshake: a bare tools/list cannot tell", () => {
+    expect(about(lintTools(tools))).toEqual([]);
+  });
+
+  it.each([
+    ["absent", undefined, ["instructions_missing"]],
+    ["empty", "", ["instructions_missing"]],
+    ["blank", " \n", ["instructions_missing"]],
+    ["short", "Tools for the Northwind archive.", []],
+    ["at Claude Code's limit", "x".repeat(2048), []],
+    ["over Claude Code's limit", "x".repeat(2049), ["instructions_long"]],
+  ])("reports %s instructions as %j", (_, instructions, expected) => {
+    expect(codes(instructions)).toEqual(expected);
+  });
+
+  it("says how long they are", () => {
+    expect(
+      lintTools(tools, { handshake: { instructions: "y".repeat(3000) } }).serverIssues,
+    ).toContainEqual({ severity: "minor", code: "instructions_long", length: 3000 });
   });
 });
 

@@ -5,11 +5,16 @@
 import { type LintReport, lintTools } from "./lint.ts";
 import { parseToolsList, type ToolsListError } from "./tools-list.ts";
 
-export type { LintReport, ServerIssue } from "./lint.ts";
+export type { LintOptions, LintReport, ServerIssue } from "./lint.ts";
 export { LINT_VERSION } from "./lint.ts";
 export type { ToolComponents, ToolIssue, ToolScore } from "./score-tool.ts";
 export type { JsonObject, JsonValue, Tool, ToolAnnotations } from "./tool.ts";
-export type { SnakeCaseKey, ToolsListError, ToolsListResult } from "./tools-list.ts";
+export type {
+  Handshake,
+  SnakeCaseKey,
+  ToolsListError,
+  ToolsListResult,
+} from "./tools-list.ts";
 export { parseToolsList };
 
 /** A scored tools/list, or why it could not be read. */
@@ -17,9 +22,12 @@ export type LintResult = { ok: true; report: LintReport } | { ok: false; error: 
 
 /**
  * Reads a tools/list in any of the accepted shapes (an array of tools, `{ tools }`, or a JSON-RPC
- * `{ result: { tools } }`) and scores each tool out of 100, and the server as a whole.
+ * `{ result: { tools } }`) and scores each tool out of 100, and the server as a whole. A file
+ * written by `forecall dump` also carries the server's instructions, which are checked too.
  */
 export function lintToolsList(text: string): LintResult {
   const parsed = parseToolsList(text);
-  return parsed.ok ? { ok: true, report: lintTools(parsed.tools) } : parsed;
+  return parsed.ok
+    ? { ok: true, report: lintTools(parsed.tools, { handshake: parsed.handshake }) }
+    : parsed;
 }

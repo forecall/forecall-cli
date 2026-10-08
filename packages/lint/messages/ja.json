@@ -19,5 +19,8 @@
   "many_tools": "ツールが {count} 個あります。25 を超えると、モデルがツールを見分けにくくなり始めます。",
   "confusable_pair": "{a} と {b} は取り違えやすい組です。それぞれの説明文に、もう一方を使うのはどんなときかを書いてください。",
   "confusable_pair_total": "取り違えやすい組は全部で {total} 組あります（上位 12 組を表示）。",
-  "identical_description": "次のツールの説明文がまったく同じです: {tools}"
+  "identical_description": "次のツールの説明文がまったく同じです: {tools}",
+  "repeated_note": "{tools} 個のツールに同じ注意書き（{words} 語）が繰り返されています: 「{excerpt}」。サーバーの instructions に 1 回だけ書き、各ツールの説明にはそのツールだけがすることを書いてください。注意書きはツールの点数に数えません。",
+  "instructions_long": "サーバーの instructions は {length} 文字です。Claude Code は既定で最初の {limit} 文字しか読みません（Codex 0.154.0 は全部読みます）。何のためのサーバーかを最初に書いてください。",
+  "instructions_missing": "サーバーに instructions がありません。何のためのサーバーで、いつ使うかを、そこに 1 回だけ書いてください。Claude Code と Gemini CLI は、ツールの説明より先に instructions を読みます。"
 }

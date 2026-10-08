@@ -5,6 +5,7 @@ import { parseToolsList } from "@forecall/lint";
 import { LINT_VERSION, lintTools } from "@forecall/lint/internal/lint";
 import { describe, expect, it } from "vitest";
 import { version } from "../package.json";
+import { t } from "./i18n";
 import { EXIT, HELP, type Io, LINT_HELP, run } from "./run";
 
 const dir = mkdtempSync(join(tmpdir(), "forecall-cli-"));
@@ -95,6 +96,23 @@ describe("run", () => {
     const ja = io();
     expect(await run(["lint", tools, "--lang", "ja"], ja.io)).toBe(EXIT.ok);
     expect(ja.out.stdout).toContain("平均点");
+  });
+
+  it("notes on stderr that a bare tools/list says nothing about the server's instructions", async () => {
+    const bare = io();
+    expect(await run(["lint", tools, "--json"], bare.io)).toBe(EXIT.ok);
+    expect(bare.out.stderr).toBe(`forecall: ${t("en", "cli.note.noInstructions")}\n`);
+    expect(JSON.parse(bare.out.stdout)).toEqual(report());
+    // A dump carries them, so they are checked instead (here: found missing).
+    const dump = join(dir, "dump.json");
+    writeFileSync(dump, JSON.stringify({ server: { name: "x" }, tools: JSON.parse(TOOLS) }));
+    const dumped = io();
+    expect(await run(["lint", dump, "--json", "--lang", "ja"], dumped.io)).toBe(EXIT.ok);
+    expect(dumped.out.stderr).toBe("");
+    expect(JSON.parse(dumped.out.stdout).serverIssues).toContainEqual({
+      severity: "minor",
+      code: "instructions_missing",
+    });
   });
 
   it("reads standard input for -", async () => {

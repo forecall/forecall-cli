@@ -28,11 +28,16 @@ if (result.ok) {
 
 - `lintToolsList(text)`: reads a tools/list in any accepted shape (an array of tools,
   `{ "tools": [...] }`, or a JSON-RPC `{ "result": { "tools": [...] } }`) and scores it. Returns
-  `{ ok: true, report }`, or `{ ok: false, error }` when the text cannot be read.
-- `parseToolsList(text)`: the reading alone. Returns `{ ok: true, tools }` or `{ ok: false, error }`.
-- `LINT_VERSION`: the version of the scoring rules. Compare scores only within one version.
-- The types: `Tool`, `LintReport`, `ToolScore`, `ToolIssue`, `ServerIssue`, `ToolsListError` and
-  the others the functions use.
+  `{ ok: true, report }`, or `{ ok: false, error }` when the text cannot be read. A file written
+  by `forecall dump` also carries the server's `instructions`, which are checked too (a bare
+  tools/list cannot say whether the server has any).
+- `parseToolsList(text)`: the reading alone. Returns `{ ok: true, tools, handshake? }` or
+  `{ ok: false, error }`; `handshake` is there for a dump.
+- `LINT_VERSION`: the version of the scoring rules. Compare scores only within one version; what
+  each version changed is in the repository's
+  [CHANGELOG.md](https://github.com/forecall/forecall-cli/blob/main/CHANGELOG.md).
+- The types: `Tool`, `LintReport`, `ToolScore`, `ToolIssue`, `ServerIssue`, `ToolsListError`,
+  `Handshake`, `LintOptions` and the others the functions use.
 
 These follow semver. What every issue code means is at
 [forecall.dev/en/docs/reading-scores](https://forecall.dev/en/docs/reading-scores).

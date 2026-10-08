@@ -4,6 +4,7 @@
   "cli.gate.average": "平均点 {average} が --fail-under の {n} を下回っています。",
   "cli.gate.tools": "--min-tool-score の {n} を下回るツール: {tools}",
   "cli.gate.issues": "--fail-on の {severity} 以上の指摘: {issues}",
+  "cli.note.noInstructions": "この入力にはサーバーの instructions が含まれていないので、instructions については何も言えません。`forecall dump` で書いたファイルには含まれ、lint はそれも検査します。",
   "cli.error.empty": "入力が空です。",
   "cli.error.notFound": "{file} が見つかりません。",
   "cli.error.unreadable": "{file} を読めませんでした（{reason}）。",

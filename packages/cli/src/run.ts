@@ -6,7 +6,7 @@ import { LINT_VERSION, lintTools } from "@forecall/lint/internal/lint";
 import { version } from "../package.json";
 import { formatInputError, formatReport, style } from "./format";
 import { failedGates, isSeverity, SEVERITIES } from "./gates";
-import { DEFAULT_LANG, isLang, LANGS } from "./i18n";
+import { DEFAULT_LANG, isLang, LANGS, t } from "./i18n";
 import { readInput } from "./input";
 import { EXIT, type Io } from "./io";
 
@@ -38,7 +38,8 @@ export const LINT_HELP = `Usage: forecall lint <file> [options]
 
 Scores the tool descriptions in an MCP tools/list result, on this machine. Nothing is sent
 anywhere. <file> holds an array of tools, {"tools": [...]}, or a JSON-RPC response
-{"result": {"tools": [...]}}, up to 1 MiB and 200 tools. Use - to read standard input.
+{"result": {"tools": [...]}}, up to 1 MiB and 200 tools. Use - to read standard input. A file
+written by "forecall dump" also carries the server's instructions, which are checked too.
 
 Options:
   --json                Print the report as JSON (the same report the web app stores)
@@ -130,14 +131,16 @@ async function lint(args: string[], io: Io): Promise<number> {
     return EXIT.error;
   }
 
-  const report = lintTools(input.tools);
+  const report = lintTools(input.tools, { handshake: input.handshake });
   if (values.json) {
     io.stdout(`${JSON.stringify(report, null, 2)}\n`);
   } else {
     const s = style(io.isTTY, io.env.NO_COLOR);
     io.stdout(formatReport(report, { lang, source, style: s }));
   }
-  // On standard error, so that --json's standard output stays the report alone.
+  // A bare tools/list says nothing about the server's instructions, so neither does the report;
+  // a dump would. Said on standard error, so that --json's standard output stays the report alone.
+  if (input.handshake === undefined) io.stderr(`forecall: ${t(lang, "cli.note.noInstructions")}\n`);
   const failed = failedGates(report, { failUnder, minToolScore, failOn }, lang);
   for (const sentence of failed) io.stderr(`forecall: ${sentence}\n`);
   return failed.length > 0 ? EXIT.belowThreshold : EXIT.ok;

@@ -2,7 +2,7 @@
 // same thing for the same input. The sentences are lint's own catalog (messages/*.json), so that
 // the package stands alone; English is the source.
 import type { IssueCode } from "./codes.ts";
-import type { ServerIssue } from "./lint.ts";
+import { INSTRUCTIONS_LIMIT, type ServerIssue } from "./lint.ts";
 import en from "./messages/en.json" with { type: "json" };
 import ja from "./messages/ja.json" with { type: "json" };
 import type { ToolIssue } from "./score-tool.ts";
@@ -62,6 +62,17 @@ export function issueMessage(lang: Lang, issue: ToolIssue | ServerIssue): string
       return sentence(lang, "confusable_pair_total", { total: issue.total });
     case "identical_description":
       return sentence(lang, "identical_description", { tools: list(lang, issue.tools) });
+    case "repeated_note":
+      return sentence(lang, "repeated_note", {
+        tools: issue.tools,
+        words: issue.words,
+        excerpt: issue.excerpt,
+      });
+    case "instructions_long":
+      return sentence(lang, "instructions_long", {
+        length: issue.length,
+        limit: INSTRUCTIONS_LIMIT.toLocaleString("en-US"),
+      });
     default:
       return sentence(lang, issue.code);
   }
