@@ -113,11 +113,10 @@ describe("forecall setup", () => {
     const desktop = JSON.parse(
       await m.read("Library/Application Support/Claude/claude_desktop_config.json"),
     );
-    expect(desktop.mcpServers.forecall).toMatchObject({
+    expect(desktop.mcpServers.forecall).toEqual({
       command: "npx",
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: mcp-remote expands ${…} from the entry's env, not we.
-      args: ["-y", "mcp-remote", MCP_ENDPOINT, "--header", "Authorization:${FORECALL_AUTH}"],
-      env: { FORECALL_AUTH: `Bearer ${KEY}` },
+      args: ["-y", "forecall-mcp"],
+      env: { FORECALL_API_KEY: KEY },
     });
     const codex = await m.read(".codex/config.toml");
     expect(codex).toBe(
@@ -240,6 +239,51 @@ describe("forecall setup", () => {
     ).toBe(EXIT.error);
     expect(m.out.stderr).toContain("Cursor: Cursor is not valid JSON");
     expect(JSON.parse(await m.read(".gemini/settings.json")).mcpServers.forecall).toBeDefined();
+  });
+
+  it("updates Claude Desktop's mcp-remote entry from forecall 0.3 to forecall-mcp, keeping its key", async () => {
+    const m = machine();
+    const file = join(m.home, "Library/Application Support/Claude/claude_desktop_config.json");
+    const earlier = {
+      command: "npx",
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: what forecall 0.3 wrote, for mcp-remote to expand.
+      args: ["-y", "mcp-remote", MCP_ENDPOINT, "--header", "Authorization:${FORECALL_AUTH}"],
+      env: { FORECALL_AUTH: `Bearer ${KEY}` },
+    };
+    await m.deps.write(
+      file,
+      JSON.stringify({ mcpServers: { other: { command: "x" }, forecall: earlier } }),
+    );
+    // No --key and no terminal: the entry has the key already, so none is asked for.
+    expect(await setup(["--client", "claude-desktop"], m.io, m.deps)).toBe(EXIT.ok);
+    expect(m.out.stdout).toContain(`Claude Desktop: updated the server in ${file}`);
+    expect(
+      JSON.parse(await m.read("Library/Application Support/Claude/claude_desktop_config.json")),
+    ).toEqual({
+      mcpServers: {
+        other: { command: "x" },
+        forecall: { command: "npx", args: ["-y", "forecall-mcp"], env: { FORECALL_API_KEY: KEY } },
+      },
+    });
+    // Once updated, a second run changes nothing.
+    m.out.stdout = "";
+    expect(await setup(["--client", "claude-desktop"], m.io, m.deps)).toBe(EXIT.ok);
+    expect(m.out.stdout).toContain("Claude Desktop: nothing to change");
+  });
+
+  it("leaves an entry named forecall alone when forecall did not write it", async () => {
+    const m = machine();
+    const mine = { command: "node", args: ["/opt/my-proxy.js"], env: { TOKEN: "x" } };
+    await m.deps.write(
+      join(m.home, "Library/Application Support/Claude/claude_desktop_config.json"),
+      JSON.stringify({ mcpServers: { forecall: mine } }),
+    );
+    expect(await setup(["--client", "claude-desktop"], m.io, m.deps)).toBe(EXIT.ok);
+    expect(m.out.stdout).toContain("Claude Desktop: nothing to change");
+    expect(
+      JSON.parse(await m.read("Library/Application Support/Claude/claude_desktop_config.json"))
+        .mcpServers.forecall,
+    ).toEqual(mine);
   });
 
   it("uses CLAUDE_CONFIG_DIR, APPDATA on Windows, and XDG on Linux", async () => {
