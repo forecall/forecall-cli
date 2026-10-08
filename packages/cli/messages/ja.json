@@ -1,6 +1,9 @@
 {
   "cli.stdin": "標準入力",
   "cli.share": "共有できるリンクが要るときは、同じ JSON を {url} に貼ってください。",
+  "cli.gate.average": "平均点 {average} が --fail-under の {n} を下回っています。",
+  "cli.gate.tools": "--min-tool-score の {n} を下回るツール: {tools}",
+  "cli.gate.issues": "--fail-on の {severity} 以上の指摘: {issues}",
   "cli.error.empty": "入力が空です。",
   "cli.error.notFound": "{file} が見つかりません。",
   "cli.error.unreadable": "{file} を読めませんでした（{reason}）。",

@@ -1,6 +1,9 @@
 {
   "cli.stdin": "standard input",
   "cli.share": "To get a link you can share, paste the same JSON at {url}",
+  "cli.gate.average": "The average score {average} is below --fail-under {n}.",
+  "cli.gate.tools": "Tools below --min-tool-score {n}: {tools}.",
+  "cli.gate.issues": "Issues at --fail-on {severity} or worse: {issues}.",
   "cli.error.empty": "The input is empty.",
   "cli.error.notFound": "{file} does not exist.",
   "cli.error.unreadable": "Could not read {file} ({reason}).",

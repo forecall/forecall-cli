@@ -69,7 +69,8 @@ Tools
 
 Each tool is scored out of 100 on six parts, and the server as a whole is checked for too many
 tools, tools easy to mix up and shared descriptions. Nothing leaves your machine. `--json` prints
-the report as JSON, and `--fail-under <n>` fails a CI job when the average is below `n`. Get the
+the report as JSON. `--fail-under <n>` fails a CI job when the average is below `n`,
+`--min-tool-score <n>` when any tool is, and `--fail-on <severity>` on any issue that severe. Get the
 JSON from your own server with `npx forecall dump`, or paste it at
 [forecall.dev/en/lint](https://forecall.dev/en/lint) for a page you can share.
 

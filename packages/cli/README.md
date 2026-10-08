@@ -45,6 +45,8 @@ cat tools.json | npx forecall lint -
 |---|---|
 | `--json` | Print the report as JSON, the same report the web app stores |
 | `--fail-under <n>` | Exit with 1 when the average score is below `n` (0 to 100) |
+| `--min-tool-score <n>` | Exit with 1 when any tool scores below `n` (0 to 100) |
+| `--fail-on <severity>` | Exit with 1 on any issue at this severity or worse: `critical`, `major` or `minor` |
 | `--lang <en\|ja>` | Language of the report (default: `en`) |
 | `-h`, `--help` | Show the help |
 | `-v`, `--version` | Show the version and the version of the scoring rules |
@@ -145,15 +147,21 @@ what to do and exits with 0.
 
 | Code | Meaning |
 |---|---|
-| 0 | Scored (and, with `--fail-under`, the average is at least `n`); for `dump`, wrote the JSON |
-| 1 | The average score is below `--fail-under` |
+| 0 | Scored, and passed the gates you set; for `dump`, wrote the JSON |
+| 1 | A gate failed: the average is below `--fail-under`, a tool is below `--min-tool-score`, or an issue is at `--fail-on` or worse. Standard error names it |
 | 2 | Could not score: a wrong option, a missing or unreadable file, or invalid input; for `dump`, could not get the tools |
 
-Issues alone do not fail the command. To stop a CI job on low scores, set `--fail-under`:
+Issues alone do not fail the command. To stop a CI job on low scores, set gates. The average
+alone can hide one bad tool: nine read tools at 90 and a delete tool at 10 still average 82. So
+gate on the worst tool too, or on the worst issue:
 
 ```sh
-npx forecall@0.1 lint tools.json --fail-under 60
+npx forecall@0.5 lint tools.json --fail-under 60 --min-tool-score 40
+npx forecall@0.5 lint tools.json --fail-on critical
 ```
+
+Each failed gate is named on standard error, with the tools it caught. With `--json`, standard
+output stays the report alone.
 
 ## What static scoring cannot tell
 

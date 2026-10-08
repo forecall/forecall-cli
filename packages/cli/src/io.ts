@@ -11,5 +11,5 @@ export interface Io {
   env: Record<string, string | undefined>;
 }
 
-/** Exit codes: done; average below --fail-under; could not do it. */
+/** Exit codes: done; a gate of lint failed (--fail-under, --min-tool-score, --fail-on); could not do it. */
 export const EXIT = { ok: 0, belowThreshold: 1, error: 2 } as const;
