@@ -14,11 +14,27 @@ type IssueKey = IssueCode;
 /** Every code has a sentence in every language: the types fail otherwise. */
 const CATALOGS: Record<Lang, Record<IssueKey, string>> = { en, ja };
 
-/** The sentence for `key`, with `{name}` placeholders replaced by `params`. */
+/**
+ * A number's two forms in a sentence, `{words, plural, one {# word} other {# words}}`: ICU's syntax,
+ * only the part the catalogs use. `#` is the number.
+ */
+const PLURAL = /\{(\w+), plural, one \{([^{}]*)\} other \{([^{}]*)\}\}/g;
+
+/**
+ * The sentence for `key`: the plural forms chosen by the language's rules ("1 word", "2 words"),
+ * then the `{name}` placeholders replaced by `params`.
+ */
 function sentence(lang: Lang, key: IssueKey, params: Record<string, string | number> = {}) {
-  return CATALOGS[lang][key].replace(/\{(\w+)\}/g, (match, name: string) =>
-    name in params ? String(params[name]) : match,
-  );
+  const rules = new Intl.PluralRules(lang);
+  return CATALOGS[lang][key]
+    .replace(PLURAL, (match, name: string, one: string, other: string) => {
+      const value = params[name];
+      if (typeof value !== "number") return match;
+      return (rules.select(value) === "one" ? one : other).replaceAll("#", String(value));
+    })
+    .replace(/\{(\w+)\}/g, (match, name: string) =>
+      name in params ? String(params[name]) : match,
+    );
 }
 
 const list = (lang: Lang, items: string[]) => items.join(lang === "ja" ? "、" : ", ");
