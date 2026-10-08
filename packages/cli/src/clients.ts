@@ -7,7 +7,7 @@
 
 import { join } from "node:path";
 import { SERVER_NAME } from "./server-name";
-import { MCP_ENDPOINT, MCP_INSTRUCTIONS } from "./shared";
+import { isAgentKey, MCP_ENDPOINT, MCP_INSTRUCTIONS } from "./shared";
 
 export { SERVER_NAME };
 
@@ -88,12 +88,18 @@ function servers(config: Record<string, unknown>): Record<string, unknown> {
 
 const stringify = (config: Record<string, unknown>) => `${JSON.stringify(config, null, 2)}\n`;
 
-/** A client whose file is JSON with `mcpServers`; `entry` is what the server looks like in it. */
+/**
+ * A client whose file is JSON with `mcpServers`; `entry` is what the server looks like in it.
+ * `earlierKey` recognizes an entry an earlier version of forecall wrote in another form and
+ * returns its key: `add` then rewrites that entry in the current form, keeping the key. Any other
+ * entry named forecall is left as it is.
+ */
 function jsonClient(
   id: ClientId,
   name: string,
   paths: Client["paths"],
   entry: (key: string) => Record<string, unknown>,
+  earlierKey?: (existing: unknown) => string | undefined,
 ): Client {
   return {
     id,
@@ -103,7 +109,11 @@ function jsonClient(
     add: (text, key) => {
       const config = parseJson(text, name);
       const list = servers(config);
-      if (Object.hasOwn(list, SERVER_NAME)) return null;
+      if (Object.hasOwn(list, SERVER_NAME)) {
+        const kept = earlierKey?.(list[SERVER_NAME]);
+        if (kept === undefined) return null;
+        return stringify({ ...config, mcpServers: { ...list, [SERVER_NAME]: entry(kept) } });
+      }
       return stringify({ ...config, mcpServers: { ...list, [SERVER_NAME]: entry(key) } });
     },
     remove: (text) => {
@@ -177,14 +187,21 @@ export const CLIENTS: readonly Client[] = [
             : join(home(env), ".config", "Claude");
       return { marker: dir, servers: join(dir, "claude_desktop_config.json") };
     },
-    // The desktop app starts stdio servers only: mcp-remote bridges to the HTTP server, with the
-    // key in the entry's environment (its README's form for a header with a space).
+    // The desktop app starts stdio servers only: forecall-mcp (forecall/forecall-mcp) relays to
+    // the HTTP server, with the key in the entry's environment.
     (key) => ({
       command: "npx",
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: mcp-remote expands ${…} from the entry's env, not we.
-      args: ["-y", "mcp-remote", MCP_ENDPOINT, "--header", "Authorization:${FORECALL_AUTH}"],
-      env: { FORECALL_AUTH: `Bearer ${key}` },
+      args: ["-y", "forecall-mcp"],
+      env: { FORECALL_API_KEY: key },
     }),
+    // Up to forecall 0.3, the entry ran mcp-remote with the key in FORECALL_AUTH.
+    (existing) => {
+      const entry = existing as { args?: unknown; env?: { FORECALL_AUTH?: unknown } } | null;
+      const args = Array.isArray(entry?.args) ? entry.args : [];
+      if (!args.includes("mcp-remote") || !args.includes(MCP_ENDPOINT)) return undefined;
+      const key = /^Bearer (\S+)$/.exec(String(entry?.env?.FORECALL_AUTH ?? ""))?.[1];
+      return key !== undefined && isAgentKey(key) ? key : undefined;
+    },
   ),
   jsonClient(
     "cursor",

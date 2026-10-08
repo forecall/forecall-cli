@@ -223,12 +223,15 @@ export async function setup(
     const paths = client.paths(io.env, deps.platform);
     const changes: string[] = [];
     try {
-      // The MCP server.
+      // The MCP server. An entry already there changes only when an earlier forecall wrote it in
+      // another form (clients.ts), which is then updated, keeping its key.
       const text = (await deps.read(paths.servers)) ?? "";
+      const had = !remove && !sensorOnly && client.has(text);
       const next = sensorOnly ? null : remove ? client.remove(text) : client.add(text, key ?? "");
       if (next !== null) {
         if (!dryRun) await deps.write(paths.servers, next);
-        changes.push(`${verb} the server in ${paths.servers}`);
+        const update = dryRun ? "would update" : "updated";
+        changes.push(`${had ? update : verb} the server in ${paths.servers}`);
       }
       // The instructions.
       if (paths.instructions !== undefined && !sensorOnly) {
@@ -278,7 +281,9 @@ export async function setup(
       );
     }
     if (!remove && client.id === "claude-desktop") {
-      io.stdout("  Restart Claude Desktop to load the server (it runs mcp-remote through npx).\n");
+      io.stdout(
+        "  Restart Claude Desktop to load the server (it runs forecall-mcp through npx).\n",
+      );
     }
   }
   if (!remove && targets.some((client) => client.id === "cursor")) {

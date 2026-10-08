@@ -8,10 +8,11 @@ Connects your AI clients to the Forecall Failure KB (https://mcp.forecall.dev/mc
 MCP server to each client it finds, puts the KB's instructions into each client's global
 instructions file between <!-- forecall:start --> and <!-- forecall:end -->, and, for Claude
 Code, can add a PostToolUse hook that suggests a kb_lookup when an MCP tool fails. Runs again
-without changing anything; --remove takes all of it out.
+without changing anything, but for an entry an earlier version wrote in another form, which it
+updates; --remove takes all of it out.
 
 Clients: claude-code (~/.claude.json, ~/.claude/CLAUDE.md, ~/.claude/settings.json),
-claude-desktop (claude_desktop_config.json, through mcp-remote), cursor (~/.cursor/mcp.json),
+claude-desktop (claude_desktop_config.json, through npx forecall-mcp), cursor (~/.cursor/mcp.json),
 codex (~/.codex/config.toml, ~/.codex/AGENTS.md), gemini (~/.gemini/settings.json,
 ~/.gemini/GEMINI.md), windsurf (~/.codeium/windsurf/mcp_config.json, memories/global_rules.md).
 

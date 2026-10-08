@@ -107,7 +107,7 @@ For each client it finds (or each `--client <name>` you give), it:
 | Client | MCP server configuration | Global instructions |
 |---|---|---|
 | `claude-code` | `~/.claude.json` (`mcpServers.forecall`, `type: "http"`); hooks in `~/.claude/settings.json` | `~/.claude/CLAUDE.md` |
-| `claude-desktop` | `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`), as a stdio entry that runs `npx -y mcp-remote` to the HTTP server | none (the app has no global file) |
+| `claude-desktop` | `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`), as a stdio entry that runs `npx -y forecall-mcp` with the key in `FORECALL_API_KEY` ([forecall-mcp](https://github.com/forecall/forecall-mcp) relays to the HTTP server; setup updates the `mcp-remote` entry forecall 0.3 and earlier wrote, keeping its key) | none (the app has no global file) |
 | `cursor` | `~/.cursor/mcp.json` | none: paste the block `setup` prints into Settings → Rules |
 | `codex` | `~/.codex/config.toml` (`[mcp_servers.forecall]`) | `~/.codex/AGENTS.md` |
 | `gemini` | `~/.gemini/settings.json` (`httpUrl`) | `~/.gemini/GEMINI.md` |
