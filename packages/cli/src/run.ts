@@ -5,6 +5,7 @@ import { parseArgs } from "node:util";
 import { LINT_VERSION, lintTools } from "@forecall/lint/internal/lint";
 import { version } from "../package.json";
 import { formatInputError, formatReport, style } from "./format";
+import { failedGates, isSeverity, SEVERITIES } from "./gates";
 import { DEFAULT_LANG, isLang, LANGS } from "./i18n";
 import { readInput } from "./input";
 import { EXIT, type Io } from "./io";
@@ -40,12 +41,15 @@ anywhere. <file> holds an array of tools, {"tools": [...]}, or a JSON-RPC respon
 {"result": {"tools": [...]}}, up to 1 MiB and 200 tools. Use - to read standard input.
 
 Options:
-  --json             Print the report as JSON (the same report the web app stores)
-  --fail-under <n>   Exit with 1 when the average score is below n (0 to 100)
-  --lang <en|ja>     Language of the report (default: en)
-  -h, --help         Show this help
+  --json                Print the report as JSON (the same report the web app stores)
+  --fail-under <n>      Exit with 1 when the average score is below n (0 to 100)
+  --min-tool-score <n>  Exit with 1 when any tool scores below n (0 to 100)
+  --fail-on <severity>  Exit with 1 on any issue at this severity or worse: critical, major or
+                        minor
+  --lang <en|ja>        Language of the report (default: en)
+  -h, --help            Show this help
 
-Exit codes: 0 scored, 1 average below --fail-under, 2 could not score.
+Exit codes: 0 scored, 1 a gate above failed (named on standard error), 2 could not score.
 `;
 
 /** Runs the command line `argv` (without node and the script) and returns the exit code. */
@@ -105,9 +109,17 @@ async function lint(args: string[], io: Io): Promise<number> {
   }
   const lang = values.lang ?? DEFAULT_LANG;
   if (!isLang(lang)) return usage(io, `--lang must be one of ${LANGS.join(", ")}`, LINT_HELP);
-  const failUnder = values["fail-under"] === undefined ? undefined : Number(values["fail-under"]);
-  if (failUnder !== undefined && !(failUnder >= 0 && failUnder <= 100)) {
+  const failUnder = score(values["fail-under"]);
+  if (Number.isNaN(failUnder)) {
     return usage(io, "--fail-under must be a number from 0 to 100", LINT_HELP);
+  }
+  const minToolScore = score(values["min-tool-score"]);
+  if (Number.isNaN(minToolScore)) {
+    return usage(io, "--min-tool-score must be a number from 0 to 100", LINT_HELP);
+  }
+  const failOn = values["fail-on"];
+  if (failOn !== undefined && !isSeverity(failOn)) {
+    return usage(io, `--fail-on must be one of ${SEVERITIES.join(", ")}`, LINT_HELP);
   }
 
   const source = positionals[0] as string;
@@ -125,7 +137,17 @@ async function lint(args: string[], io: Io): Promise<number> {
     const s = style(io.isTTY, io.env.NO_COLOR);
     io.stdout(formatReport(report, { lang, source, style: s }));
   }
-  return failUnder !== undefined && report.scoreAvg < failUnder ? EXIT.belowThreshold : EXIT.ok;
+  // On standard error, so that --json's standard output stays the report alone.
+  const failed = failedGates(report, { failUnder, minToolScore, failOn }, lang);
+  for (const sentence of failed) io.stderr(`forecall: ${sentence}\n`);
+  return failed.length > 0 ? EXIT.belowThreshold : EXIT.ok;
+}
+
+/** A score option's value: undefined when not given, NaN when it is not from 0 to 100. */
+function score(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const n = Number(value);
+  return value.trim() !== "" && n >= 0 && n <= 100 ? n : Number.NaN;
 }
 
 function parseLintArgs(args: string[]) {
@@ -136,6 +158,8 @@ function parseLintArgs(args: string[]) {
     options: {
       json: { type: "boolean" },
       "fail-under": { type: "string" },
+      "min-tool-score": { type: "string" },
+      "fail-on": { type: "string" },
       lang: { type: "string" },
       help: { type: "boolean", short: "h" },
     },
