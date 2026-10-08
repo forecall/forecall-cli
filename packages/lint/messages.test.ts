@@ -71,4 +71,19 @@ describe("issueMessage", () => {
   it("names both tools of a confusable pair", () => {
     expect(issueMessage("en", ISSUES[18] as ServerIssue)).toBe("x and y are easy to mix up.");
   });
+
+  it("says one word or several, as each language does", () => {
+    const short = (words: number): ToolIssue => ({ severity: "major", code: "too_short", words });
+    expect(issueMessage("en", short(1))).toBe("The description is too short (1 word).");
+    expect(issueMessage("en", short(4))).toBe("The description is too short (4 words).");
+    expect(issueMessage("ja", short(1))).toBe(issueMessage("ja", short(4)).replace("4", "1"));
+    expect(issueMessage("en", { severity: "major", code: "restates_name", words: 1 })).toBe(
+      "The description only restates the name (1 word).",
+    );
+    for (const lang of ["en", "ja"] as const) {
+      for (const issue of ISSUES) {
+        expect(issueMessage(lang, issue), issue.code).not.toMatch(/#|plural/);
+      }
+    }
+  });
 });
