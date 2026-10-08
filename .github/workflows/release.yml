@@ -38,7 +38,7 @@ jobs:
   # Which packages to stage: the one picked by hand, or each whose version npm does not have.
   plan:
     name: plan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       packages: ${{ steps.plan.outputs.packages }}
@@ -87,7 +87,7 @@ jobs:
     name: build
     needs: plan
     if: needs.plan.outputs.packages != '[]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       matrix:
@@ -145,7 +145,7 @@ jobs:
   publish:
     name: publish
     needs: [plan, build]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
       # @forecall/lint before forecall, one at a time.
