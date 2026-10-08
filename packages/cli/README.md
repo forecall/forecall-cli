@@ -33,6 +33,11 @@ A JSON file of up to 1 MiB and 200 tools, in one of these shapes:
 Keys must use the MCP wire format (`inputSchema`, `annotations.readOnlyHint`). snake_case keys
 such as `input_schema`, which some SDKs write out, are reported rather than converted.
 
+A file written by `forecall dump` also carries the server's `instructions`, and `lint` checks
+them too: whether the server has any, and whether they are longer than Claude Code reads (2,048
+characters by default). A bare tools/list cannot say whether the server has instructions, so
+`lint` says so on standard error and leaves them out of the report.
+
 Use `-` to read standard input:
 
 ```sh
@@ -52,7 +57,8 @@ cat tools.json | npx forecall lint -
 | `-v`, `--version` | Show the version and the version of the scoring rules |
 
 Results are comparable only within the same version of the scoring rules, which every report
-shows.
+shows. What each version changed is in the repository's
+[CHANGELOG.md](https://github.com/forecall/forecall-cli/blob/main/CHANGELOG.md).
 
 ## Get the tools/list: forecall dump
 

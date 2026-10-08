@@ -32,7 +32,15 @@ function readTool(record: string) {
 const RECORDS = ["invoice", "customer", "order", "shipment", "refund", "coupon", "ticket"];
 const file = join(dir, "tools.json");
 const tools = [DELETE, ...RECORDS.map(readTool)];
-writeFileSync(file, JSON.stringify(tools));
+// As `forecall dump` writes it, so that nothing is said about instructions on stderr.
+writeFileSync(
+  file,
+  JSON.stringify({
+    server: { name: "shop" },
+    instructions: "Tools for the shop's records.",
+    tools,
+  }),
+);
 
 const parsed = parseToolsList(JSON.stringify(tools));
 if (!parsed.ok) throw new Error(JSON.stringify(parsed.error));

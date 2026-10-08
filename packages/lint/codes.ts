@@ -16,6 +16,7 @@ export const ISSUE_CODES: {
 } = {
   no_description: { scope: "tool", severities: ["critical"] },
   identical_description: { scope: "server", severities: ["critical"] },
+  repeated_note: { scope: "server", severities: ["major"] },
   restates_name: { scope: "tool", severities: ["major"] },
   too_short: { scope: "tool", severities: ["major"] },
   no_usage_context: { scope: "tool", severities: ["major"] },
@@ -35,4 +36,6 @@ export const ISSUE_CODES: {
   no_constraints: { scope: "tool", severities: ["minor"] },
   long_name: { scope: "tool", severities: ["minor"] },
   many_tools: { scope: "server", severities: ["minor"] },
+  instructions_long: { scope: "server", severities: ["minor"] },
+  instructions_missing: { scope: "server", severities: ["minor"] },
 };

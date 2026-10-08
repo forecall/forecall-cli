@@ -52,7 +52,19 @@ export type ToolsListError =
   | { code: "snake_case_keys"; keys: SnakeCaseKey[] }
   | { code: "invalid_tool"; path: string; expected: string };
 
-export type ToolsListResult = { ok: true; tools: Tool[] } | { ok: false; error: ToolsListError };
+/**
+ * What the server said at initialize, when the input is a `forecall dump` file (`server` or
+ * `instructions` beside `tools`). A bare tools/list carries none, so the linter cannot tell
+ * whether the server has instructions; a dump can.
+ */
+export interface Handshake {
+  /** The server's instructions; undefined when the dump has none. */
+  instructions: string | undefined;
+}
+
+export type ToolsListResult =
+  | { ok: true; tools: Tool[]; handshake?: Handshake }
+  | { ok: false; error: ToolsListError };
 
 /** Checks the size of the pasted text, parses it and reads it with readToolsList. */
 export function parseToolsList(text: string): ToolsListResult {
@@ -92,16 +104,30 @@ export function readToolsList(data: unknown): ToolsListResult {
     if ("code" in tool) return { ok: false, error: tool };
     tools.push(tool);
   }
-  return { ok: true, tools };
+  return extracted.handshake === undefined
+    ? { ok: true, tools }
+    : { ok: true, tools, handshake: extracted.handshake };
 }
 
-/** Accepts a bare array, `{"tools": [...]}` or a JSON-RPC response `{"result": {"tools": [...]}}`. */
+/**
+ * Accepts a bare array, `{"tools": [...]}` or a JSON-RPC response `{"result": {"tools": [...]}}`.
+ * A `forecall dump` file (`{"tools": [...]}` with `server` or `instructions`) also gives the
+ * handshake.
+ */
 export function extractTools(
   data: unknown,
-): { ok: true; tools: unknown[] } | { ok: false; error: { code: "unrecognized_shape" } } {
+):
+  | { ok: true; tools: unknown[]; handshake?: Handshake }
+  | { ok: false; error: { code: "unrecognized_shape" } } {
   if (Array.isArray(data)) return { ok: true, tools: data };
   if (isObject(data)) {
-    if (Array.isArray(data.tools)) return { ok: true, tools: data.tools };
+    if (Array.isArray(data.tools)) {
+      if (isObject(data.server) || Object.hasOwn(data, "instructions")) {
+        const instructions = typeof data.instructions === "string" ? data.instructions : undefined;
+        return { ok: true, tools: data.tools, handshake: { instructions } };
+      }
+      return { ok: true, tools: data.tools };
+    }
     if (isObject(data.result) && Array.isArray(data.result.tools)) {
       return { ok: true, tools: data.result.tools };
     }

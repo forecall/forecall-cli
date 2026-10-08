@@ -1,16 +1,28 @@
 import { pyStrip } from "./py-regex.ts";
+import { repeatedNote } from "./repeated-note.ts";
 import { roundHalfEven } from "./round.ts";
 import { scoreTool, type ToolScore } from "./score-tool.ts";
 import { nameTokens, tokens } from "./text.ts";
 import type { Tool } from "./tool.ts";
+import type { Handshake } from "./tools-list.ts";
 
 /**
  * Version of the scoring rules, stored with every result. Results are comparable only within a
- * version. Bump it with any change that can give some input a different score, component, issue
- * code or severity: patterns, word lists, thresholds, rounding, or how tools-list.ts reads the
- * input.
+ * version. Bump it with any change that can give some input a different score or component:
+ * patterns, word lists, thresholds, rounding, what is read from the input. An issue code added
+ * or reworded alone does not bump it (ADR-0013, 2026-10-09). Each version's changes are in the
+ * repository's CHANGELOG.md.
+ *
+ * v1 is the Python prototype's table (research/mcp-lint). v2 takes a note repeated in most tools
+ * out of each description before scoring (repeated-note.ts).
  */
-export const LINT_VERSION = 1;
+export const LINT_VERSION = 2;
+
+/**
+ * How much of a server's instructions Claude Code passes to the model by default (its MCP
+ * documentation, read 2026-10-09); Codex CLI 0.154.0 passes them whole (measured the same day).
+ */
+export const INSTRUCTIONS_LIMIT = 2048;
 
 /** confusable_pair issues shown; the rest are counted in confusablePairsTotal. */
 const SHOWN_PAIRS = 12;
@@ -28,7 +40,28 @@ export type ServerIssue =
       nameSimilarity: number;
     }
   | { severity: "major"; code: "confusable_pair_total"; total: number }
-  | { severity: "critical"; code: "identical_description"; tools: string[] };
+  | { severity: "critical"; code: "identical_description"; tools: string[] }
+  | {
+      severity: "major";
+      code: "repeated_note";
+      /** How many tools carry the note. */
+      tools: number;
+      /** The note's length in words. */
+      words: number;
+      /** How the note starts. */
+      excerpt: string;
+    }
+  | { severity: "minor"; code: "instructions_long"; length: number }
+  | { severity: "minor"; code: "instructions_missing" };
+
+export interface LintOptions {
+  /**
+   * The server's initialize result, when the input carried it (a `forecall dump` file). With it,
+   * the instructions are checked; without it, nothing is said about them, since a bare tools/list
+   * does not tell whether the server has any.
+   */
+  handshake?: Handshake | undefined;
+}
 
 /** The linter's result. Plain JSON, so it can be stored and sent as is. */
 export interface LintReport {
@@ -42,11 +75,46 @@ export interface LintReport {
   serverIssues: ServerIssue[];
 }
 
-/** Port of lint_file and server_smells in the Python prototype. */
-export function lintTools(tools: readonly Tool[]): LintReport {
-  const scores = tools.map(scoreTool);
+/**
+ * Port of lint_file and server_smells in the Python prototype (v1), plus what v2 added: a note
+ * repeated in most tools is taken out of their descriptions first, so that each tool is scored
+ * and compared on what it alone says; and the server's instructions are checked when given.
+ */
+export function lintTools(tools: readonly Tool[], options: LintOptions = {}): LintReport {
+  const note = repeatedNote(tools);
+  const own =
+    note === undefined
+      ? tools
+      : tools.map((tool, index) =>
+          note.stripped[index] === tool.description
+            ? tool
+            : { ...tool, description: note.stripped[index] },
+        );
+  const scores = own.map(scoreTool);
   const total = scores.reduce((sum, result) => sum + result.score, 0);
-  const { serverIssues, confusablePairsTotal } = serverSmells(tools);
+  const { serverIssues, confusablePairsTotal } = serverSmells(own);
+  if (note !== undefined) {
+    serverIssues.push({
+      severity: "major",
+      code: "repeated_note",
+      tools: note.tools,
+      words: note.words,
+      excerpt: note.excerpt,
+    });
+  }
+  const { handshake } = options;
+  if (handshake !== undefined) {
+    const instructions = handshake.instructions ?? "";
+    if (instructions.trim() === "") {
+      serverIssues.push({ severity: "minor", code: "instructions_missing" });
+    } else if (instructions.length > INSTRUCTIONS_LIMIT) {
+      serverIssues.push({
+        severity: "minor",
+        code: "instructions_long",
+        length: instructions.length,
+      });
+    }
+  }
   return {
     lintVersion: LINT_VERSION,
     toolCount: tools.length,

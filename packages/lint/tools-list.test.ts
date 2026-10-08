@@ -24,7 +24,43 @@ describe("extractTools", () => {
     ["a JSON-RPC response", { jsonrpc: "2.0", id: 1, result: { tools } }],
     ["tools and result together (tools wins)", { tools, result: { tools: [] } }],
   ])("accepts %s", (_, data) => {
-    expect(extractTools(data)).toEqual({ ok: true, tools });
+    expect(extractTools(data)).toMatchObject({ ok: true, tools });
+  });
+
+  // A dump says what the server answered at initialize; a bare list cannot (forecall-cli#12).
+  it.each([
+    [
+      "our dump",
+      { server: { name: "x" }, instructions: "Use me.", tools },
+      { instructions: "Use me." },
+    ],
+    [
+      "our dump of a server with no instructions",
+      { server: { name: "x" }, tools },
+      { instructions: undefined },
+    ],
+    [
+      "a dump with only instructions",
+      { instructions: "Use me.", tools },
+      { instructions: "Use me." },
+    ],
+    [
+      "a dump whose instructions are not a string",
+      { server: {}, instructions: 5, tools },
+      { instructions: undefined },
+    ],
+  ])("reads the handshake of %s", (_, data, handshake) => {
+    expect(extractTools(data)).toEqual({ ok: true, tools, handshake });
+    expect(readToolsList(data)).toMatchObject({ ok: true, handshake });
+  });
+
+  it.each([
+    ["a bare array", tools],
+    ["an MCP result", { tools }],
+    ["a JSON-RPC response", { jsonrpc: "2.0", id: 1, result: { tools } }],
+  ])("gives no handshake for %s", (_, data) => {
+    expect(extractTools(data)).not.toHaveProperty("handshake");
+    expect(readToolsList(data)).not.toHaveProperty("handshake");
   });
 
   it.each([

@@ -1,6 +1,6 @@
 // Reading the tools/list to score: a file, or standard input for `-`.
 import { createReadStream } from "node:fs";
-import type { Tool } from "@forecall/lint";
+import type { Handshake, Tool } from "@forecall/lint";
 import { parseToolsList, type ToolsListError } from "@forecall/lint";
 import { MAX_INPUT_BYTES } from "@forecall/lint/internal/tools-list";
 
@@ -11,7 +11,10 @@ export type InputError =
   | { code: "not_found"; file: string }
   | { code: "unreadable"; file: string; reason: string };
 
-export type InputResult = { ok: true; tools: Tool[] } | { ok: false; error: InputError };
+/** The tools, and the server's handshake when the input is a `forecall dump` file. */
+export type InputResult =
+  | { ok: true; tools: Tool[]; handshake?: Handshake }
+  | { ok: false; error: InputError };
 
 /**
  * Reads `source` (a path, or `-` for `stdin`) and parses it as the web does. Stops reading once

@@ -4,6 +4,7 @@
   "cli.gate.average": "The average score {average} is below --fail-under {n}.",
   "cli.gate.tools": "Tools below --min-tool-score {n}: {tools}.",
   "cli.gate.issues": "Issues at --fail-on {severity} or worse: {issues}.",
+  "cli.note.noInstructions": "This input carries no server instructions, so nothing is said about them. A file written by `forecall dump` carries them, and lint checks them too.",
   "cli.error.empty": "The input is empty.",
   "cli.error.notFound": "{file} does not exist.",
   "cli.error.unreadable": "Could not read {file} ({reason}).",

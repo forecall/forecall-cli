@@ -19,5 +19,8 @@
   "many_tools": "{count} tools. Above 25, models start to tell tools apart less well.",
   "confusable_pair": "{a} and {b} are easy to mix up. In each description, say when to use the other one instead.",
   "confusable_pair_total": "{total} confusable pairs in all; the top 12 are shown.",
-  "identical_description": "These tools share the same description: {tools}."
+  "identical_description": "These tools share the same description: {tools}.",
+  "repeated_note": "{tools} tools repeat the same note ({words} words): \"{excerpt}\". Say it once in the server's instructions, and let each description say what only that tool does. The note does not count toward the tools' scores.",
+  "instructions_long": "The server's instructions are {length} characters. Claude Code reads only the first {limit} by default (Codex 0.154.0 reads them whole). Put what the server is for first.",
+  "instructions_missing": "The server has no instructions. Say there, once, what the server is for and when to use it: Claude Code and Gemini CLI read the instructions before the tool descriptions."
 }

@@ -34,11 +34,14 @@ const ISSUES: (ToolIssue | ServerIssue)[] = [
   },
   { severity: "major", code: "confusable_pair_total", total: 57 },
   { severity: "critical", code: "identical_description", tools: ["p", "q"] },
+  { severity: "major", code: "repeated_note", tools: 7, words: 150, excerpt: "IMPORTANT - …" },
+  { severity: "minor", code: "instructions_long", length: 2904 },
+  { severity: "minor", code: "instructions_missing" },
 ];
 
 describe("issueMessage", () => {
-  it("covers all 21 issue codes", () => {
-    expect(new Set(ISSUES.map((issue) => issue.code)).size).toBe(21);
+  it("covers all 24 issue codes", () => {
+    expect(new Set(ISSUES.map((issue) => issue.code)).size).toBe(24);
     expect(ISSUES.map((issue) => issue.code).toSorted()).toEqual(
       Object.keys(ISSUE_CODES).toSorted(),
     );
