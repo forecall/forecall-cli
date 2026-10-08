@@ -80,6 +80,9 @@ JSON and 2 when it could not get the tools.
 
 ## Connect your AI clients: forecall setup
 
+[![smithery badge](https://smithery.ai/badge/forecall/forecall-kb)](https://smithery.ai/servers/forecall/forecall-kb)
+[![Forecall Failure KB MCP connector – tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/dev.forecall/forecall-kb/badges/score.svg)](https://glama.ai/mcp/connectors/dev.forecall/forecall-kb)
+
 ```sh
 npx forecall setup
 ```
