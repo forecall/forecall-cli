@@ -1,7 +1,7 @@
 # forecall
 
-Score the tool descriptions of your MCP server on your own machine, before an AI agent has to
-guess what they mean.
+Score the tool descriptions of your MCP server on your own machine: what each one tells an AI
+agent, and what it leaves out.
 
 ```sh
 npx forecall lint tools.json
@@ -171,8 +171,12 @@ output stays the report alone.
 
 ## What static scoring cannot tell
 
-The score reads only the text of each description and schema. Short tools whose names already
-say what they do, such as `browser_close`, score low here even when models use them well.
+The score reads only the text of each description and schema: it says what is written, not what
+a model will do. Short tools whose names already say what they do, such as `browser_close`, score
+low here even when models use them well, and in our measurements (2026-10-09) current models chose
+the right tool in one step even from one-line descriptions, and between pairs with near-identical
+descriptions, as long as the names and schemas differed. What the text cannot show is what happens
+over several steps and whether a sentence you add helps or misleads.
 
 ## Requirements
 

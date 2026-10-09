@@ -10,11 +10,11 @@ npx forecall lint tools.json
 
 ```text
 Forecall lint · tools.json
-Scoring rules v1
+Scoring rules v2
 
-Average score     42.5 / 100
-Tools             2
-Confusable pairs  0
+Average score                42.5 / 100
+Tools                        2
+Near-identical descriptions  0
 
 Across the server
   No server-wide issues.
@@ -68,7 +68,7 @@ Tools
 </details>
 
 Each tool is scored out of 100 on six parts, and the server as a whole is checked for too many
-tools, tools easy to mix up and shared descriptions. Nothing leaves your machine. `--json` prints
+tools, near-identical descriptions and shared descriptions. Nothing leaves your machine. `--json` prints
 the report as JSON. `--fail-under <n>` fails a CI job when the average is below `n`,
 `--min-tool-score <n>` when any tool is, and `--fail-on <severity>` on any issue that severe. Get the
 JSON from your own server with `npx forecall dump`, or paste it at

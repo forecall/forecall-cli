@@ -188,7 +188,7 @@ describe("forecall lint, run as a command", () => {
     );
     expect(status).toBe(0);
     expect(stdout).toContain("Forecall lint · 標準入力\n");
-    expect(stdout).toContain("取り違えやすい組  21\n");
+    expect(stdout).toContain("説明がほぼ同じ組  21\n");
   });
 
   it("exits with 1 below --fail-under and 2 when it cannot score", () => {

@@ -92,7 +92,9 @@ describe("run", () => {
   it("prints a table by default, in the language asked for", async () => {
     const { io: x, out } = io();
     expect(await run(["lint", tools], x)).toBe(EXIT.ok);
-    expect(out.stdout).toContain(`Average score     ${report().scoreAvg.toFixed(1)} / 100`);
+    expect(out.stdout).toContain(
+      `Average score                ${report().scoreAvg.toFixed(1)} / 100`,
+    );
     const ja = io();
     expect(await run(["lint", tools, "--lang", "ja"], ja.io)).toBe(EXIT.ok);
     expect(ja.out.stdout).toContain("平均点");

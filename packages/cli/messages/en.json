@@ -16,7 +16,7 @@
   "lint.error.snakeCaseKeys": "Some keys are in snake_case. The MCP wire format uses camelCase, so rename them as below. JSON written out by the Python SDK often looks like this.",
   "result.summary.tools": "Tools",
   "result.summary.average": "Average score",
-  "result.summary.pairs": "Confusable pairs",
+  "result.summary.pairs": "Near-identical descriptions",
   "result.meta.rules": "Scoring rules",
   "result.server.heading": "Across the server",
   "result.server.none": "No server-wide issues.",
@@ -34,5 +34,5 @@
   "result.severity.major": "Major",
   "result.severity.minor": "Minor",
   "result.limits.heading": "What static scoring cannot tell",
-  "result.limits.body": "This score reads only the text of each description and schema. Short tools whose names already say what they do, such as browser_close, score low here even when models use them well. How often real models choose and call your tools correctly is what an evaluation measures, on the Pro and Team plans."
+  "result.limits.body": "This score reads only the text of each description and schema: it says what is written, not what a model will do. Short tools whose names already say what they do, such as browser_close, score low here even when models use them well, and in our measurements current models chose the right tool in one step even from one-line descriptions, as long as the names and schemas differed. What the text cannot show, such as what happens over several steps and whether an added sentence helps or misleads, is what an evaluation measures, on the Pro and Team plans."
 }

@@ -74,7 +74,7 @@ describe("issueMessage", () => {
   // A pointer to the other tool in each description tells them apart (#7).
   it("names both tools of a confusable pair, and asks each to point to the other", () => {
     expect(issueMessage("en", ISSUES[18] as ServerIssue)).toBe(
-      "x and y are easy to mix up. In each description, say when to use the other one instead.",
+      "x and y have nearly the same description; only the names and schemas tell them apart. In each description, say when to use the other one instead.",
     );
   });
 
