@@ -48,6 +48,7 @@ export function issueMessage(lang: Lang, issue: ToolIssue | ServerIssue): string
       return sentence(lang, issue.code, { words: issue.words });
     case "param_no_description":
     case "loose_string_param":
+    case "id_source_missing":
       return sentence(lang, issue.code, { params: list(lang, issue.params) });
     case "vague_boolean":
       return sentence(lang, "vague_boolean", { param: issue.param });

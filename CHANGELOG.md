@@ -39,6 +39,8 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `forecall`
 
+- 0.7.0 (2026-10-09): with `@forecall/lint` 0.3.0, `--fail-on major` no longer trips on
+  near-identical descriptions (now minor), and the report shows the two new findings.
 - 0.6.1 (2026-10-09): the summary's "Confusable pairs" line is "Near-identical descriptions",
   and the note on what static scoring cannot tell says the score reads what is written, not
   what a model will do: measured on 2026-10-09, current models chose the right tool in one step
@@ -55,6 +57,18 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `@forecall/lint`
 
+- 0.3.0 (2026-10-09, forecall-cli#16): from the calibration of 2026-10-09 (forecall/forecall#448:
+  868 one-step cases on nine servers, two models), where no ambiguous case went to the pair's
+  other tool and 72% of the misses were a lookup first.
+  - `confusable_pair` and `confusable_pair_total` are minor, not major: models tell such pairs
+    apart by their names and schemas; the finding is about the text.
+  - New `deprecated` (minor): the description says the tool is deprecated. Models rightly avoid
+    such a tool, so name the replacement and consider removing it.
+  - New `id_source_missing` (minor): a required argument named like an identifier (`id`,
+    `page_id`, `libraryId`, `uid`, `ref`, `parent`, a cursor) whose description, or the tool's,
+    does not say where the value comes from ("from the snapshot", "returned by …", "call
+    list_pages", "retrieved from 'resolve-library-id'"). Without it, models look the id up first.
+  - No score moves, so the rules stay v2; the research servers' scores are unchanged.
 - 0.2.1 (2026-10-09): the `confusable_pair` and `confusable_pair_total` sentences say the
   descriptions are nearly the same and only the names and schemas differ, instead of "easy to
   mix up". Wording only; the code and the rules (v2) are unchanged.

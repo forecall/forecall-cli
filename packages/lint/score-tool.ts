@@ -1,11 +1,14 @@
 import {
   CONS_PATTERNS,
   CTX_PATTERNS,
+  DEPRECATED,
   DESTRUCTIVE,
   DISAMBIGUATION,
   EX_PATTERNS,
   GENERIC_NAME_TOKENS,
   hasUseInstead,
+  ID_PARAM,
+  ID_SOURCE_PATTERNS,
   NAME_CHARS,
   RET_PATTERNS,
   VERB_START,
@@ -43,7 +46,10 @@ export type ToolIssue =
   | { severity: "major"; code: "destructive_unmarked" }
   | { severity: "major"; code: "generic_name" }
   | { severity: "minor"; code: "long_name"; length: number }
-  | { severity: "major"; code: "bad_name_chars" };
+  | { severity: "major"; code: "bad_name_chars" }
+  // Added in 0.3.0 (forecall-cli#16); neither changes a score.
+  | { severity: "minor"; code: "deprecated" }
+  | { severity: "minor"; code: "id_source_missing"; params: string[] };
 
 export interface ToolScore {
   name: string;
@@ -217,6 +223,25 @@ export function scoreTool(tool: Tool): ToolScore {
   const length = [...name].length; // code points, like Python's len()
   if (length > 40) issues.push({ severity: "minor", code: "long_name", length });
   if (!NAME_CHARS.test(name)) issues.push({ severity: "major", code: "bad_name_chars" });
+
+  // Findings that move no score (forecall-cli#16, from the calibration in forecall/forecall#448):
+  // a tool said to be deprecated, which models rightly avoid, and a required identifier whose
+  // description does not say where its value comes from, which sends models to look it up first.
+  if (DEPRECATED.test(desc)) issues.push({ severity: "minor", code: "deprecated" });
+  const required = Array.isArray(schema.required) ? schema.required : [];
+  const sourced = has(ID_SOURCE_PATTERNS, desc);
+  const unsourced = props
+    .filter((prop) => !prop.path.includes(".") && !prop.path.includes("["))
+    .filter((prop) => required.includes(prop.path) && ID_PARAM.test(prop.path))
+    .filter(
+      (prop) =>
+        !sourced &&
+        !(isObject(prop.schema) && has(ID_SOURCE_PATTERNS, stringOr(prop.schema.description))),
+    )
+    .map((prop) => prop.path);
+  if (unsourced.length > 0) {
+    issues.push({ severity: "minor", code: "id_source_missing", params: unsourced });
+  }
 
   const components: ToolComponents = {
     purpose: Math.min(purpose, 20),

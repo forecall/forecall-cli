@@ -25,8 +25,8 @@ export const ISSUE_CODES: {
   bad_name_chars: { scope: "tool", severities: ["major"] },
   param_no_description: { scope: "tool", severities: ["major", "minor"] },
   too_many_tools: { scope: "server", severities: ["major"] },
-  confusable_pair: { scope: "server", severities: ["major"] },
-  confusable_pair_total: { scope: "server", severities: ["major"] },
+  confusable_pair: { scope: "server", severities: ["minor"] },
+  confusable_pair_total: { scope: "server", severities: ["minor"] },
   too_long: { scope: "tool", severities: ["minor"] },
   loose_string_param: { scope: "tool", severities: ["minor"] },
   no_required: { scope: "tool", severities: ["minor"] },
@@ -38,4 +38,6 @@ export const ISSUE_CODES: {
   many_tools: { scope: "server", severities: ["minor"] },
   instructions_long: { scope: "server", severities: ["minor"] },
   instructions_missing: { scope: "server", severities: ["minor"] },
+  deprecated: { scope: "tool", severities: ["minor"] },
+  id_source_missing: { scope: "tool", severities: ["minor"] },
 };

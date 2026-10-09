@@ -15,6 +15,8 @@
   "generic_name": "The name is made of generic words only.",
   "long_name": "The name is long ({length} characters).",
   "bad_name_chars": "The name contains characters other than letters, digits, _, - and .",
+  "deprecated": "The description says the tool is deprecated. Name the replacement, and consider taking the tool out of tools/list: models avoid it when asked for what it does.",
+  "id_source_missing": "Required identifiers whose description does not say where the value comes from: {params}. Name the tool or the place that returns it, or models look it up first.",
   "too_many_tools": "{count} tools. Above 40, models choose less accurately.",
   "many_tools": "{count} tools. Above 25, models start to tell tools apart less well.",
   "confusable_pair": "{a} and {b} have nearly the same description; only the names and schemas tell them apart. In each description, say when to use the other one instead.",
