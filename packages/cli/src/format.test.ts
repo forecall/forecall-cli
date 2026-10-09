@@ -33,7 +33,7 @@ const REPORT: LintReport = {
   ],
   serverIssues: [
     {
-      severity: "major",
+      severity: "minor",
       code: "confusable_pair",
       tools: ["a_tool", "b_tool"],
       similarity: 0.8,
@@ -61,7 +61,7 @@ describe("formatReport", () => {
 
   it("shows the pair's similarities under it", () => {
     expect(text).toContain(
-      "  Major     confusable_pair  a_tool and b_tool have nearly the same description; only the names and schemas tell them apart. In each description, say when to use the other one instead.\n" +
+      "  Minor     confusable_pair  a_tool and b_tool have nearly the same description; only the names and schemas tell them apart. In each description, say when to use the other one instead.\n" +
         "                             Description similarity 0.80 · Name similarity 0.50\n",
     );
   });

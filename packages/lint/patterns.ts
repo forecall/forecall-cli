@@ -107,6 +107,28 @@ export const DESTRUCTIVE = ignoreCase(
   String.raw`\b(delete|remove|destroy|purge|drop|overwrite|reset|wipe)\b`,
 );
 export const NAME_CHARS = pyRegex(String.raw`^[A-Za-z0-9_\-\.]+$`);
+
+// Added for forecall-cli#16 (2026-10-09), after the calibration in forecall/forecall#448. Neither
+// moves a score, so LINT_VERSION stays 2.
+/** A tool whose description says so gets `deprecated`: models rightly avoid it. */
+export const DEPRECATED = ignoreCase(String.raw`\bdeprecated\b`);
+/** An argument name that carries an identifier or a reference: id, page_id, libraryId, uid, ref. */
+export const ID_PARAM =
+  /(?:^|[_-])(?:id|ids|uid|ref|refs|cursor)$|[a-z0-9](?:Id|Ids|Ref|Refs|Cursor)$|^parent$/;
+/**
+ * How an argument's description says where its value comes from. Plain JavaScript patterns, not
+ * the prototype's, so they are not run through pyRegex. A quote may be ', " or a backtick.
+ */
+export const ID_SOURCE_PATTERNS = [
+  // "from the page snapshot", "from a previous call", "from the search result"
+  "\\bfrom (?:the |a |an |your )?(?:latest |previous |earlier |prior |last |page |content |current )*(?:snapshot|list|listing|search|results?|response|lookup|call|query|output)\\b",
+  // "returned by list_pages", "obtained from", "retrieved from"
+  "\\b(?:returned|obtained|retrieved|taken|received|comes|come) (?:by|from|via|with|in)\\b",
+  // "Call list_pages to list pages", "see search_nodes", "use resolve-library-id first"
+  "\\b(?:call|see|use|run|via|through) ['\"`]?[a-z][a-z0-9]*[_-][a-z0-9_.-]+['\"`]?\\b",
+  // "from 'resolve-library-id'"
+  "\\bfrom ['\"`][a-z][a-z0-9_.-]+['\"`]",
+].map((source) => new RegExp(source, "i"));
 export const WORD = pyRegex(String.raw`[a-zA-Z][a-zA-Z0-9_\-]*`, "g");
 export const NAME_SEPARATOR = pyRegex(String.raw`[_\-\.\s]+|(?<=[a-z])(?=[A-Z])`);
 

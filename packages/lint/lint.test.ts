@@ -32,11 +32,17 @@ function asPrototype(report: LintReport) {
         return undefined;
     }
   };
+  // The prototype rated the pairs major; they are minor since 0.3.0 (forecall-cli#16). The record
+  // keeps the prototype's word.
+  const severity = (issue: ServerIssue) =>
+    issue.code === "confusable_pair" || issue.code === "confusable_pair_total"
+      ? "major"
+      : issue.severity;
   return {
     toolCount: report.toolCount,
     scoreAvg: report.scoreAvg,
     confusablePairsTotal: report.confusablePairsTotal,
-    serverIssues: report.serverIssues.map((issue) => [issue.severity, issue.code, detail(issue)]),
+    serverIssues: report.serverIssues.map((issue) => [severity(issue), issue.code, detail(issue)]),
   };
 }
 
@@ -69,10 +75,14 @@ describe("confusable pairs", () => {
       12,
     );
     expect(report.serverIssues).toContainEqual({
-      severity: "major",
+      severity: "minor",
       code: "confusable_pair_total",
       total: 21,
     });
+    // Minor since 0.3.0: models tell such pairs apart by their names and schemas (#16).
+    for (const issue of report.serverIssues) {
+      if (issue.code === "confusable_pair") expect(issue.severity).toBe("minor");
+    }
   });
 
   it("gives no total when every pair is shown", () => {

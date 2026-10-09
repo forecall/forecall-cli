@@ -30,8 +30,10 @@ const SHOWN_PAIRS = 12;
 export type ServerIssue =
   | { severity: "major"; code: "too_many_tools"; count: number }
   | { severity: "minor"; code: "many_tools"; count: number }
+  // Minor since 0.3.0 (forecall-cli#16): the calibration in forecall/forecall#448 found that
+  // models tell such pairs apart by their names and schemas; the finding is about the text.
   | {
-      severity: "major";
+      severity: "minor";
       code: "confusable_pair";
       tools: [string, string];
       /** Jaccard similarity of the descriptions' tokens, rounded to 2 places. */
@@ -39,7 +41,7 @@ export type ServerIssue =
       /** Jaccard similarity of the names' tokens, rounded to 2 places. */
       nameSimilarity: number;
     }
-  | { severity: "major"; code: "confusable_pair_total"; total: number }
+  | { severity: "minor"; code: "confusable_pair_total"; total: number }
   | { severity: "critical"; code: "identical_description"; tools: string[] }
   | {
       severity: "major";
@@ -147,7 +149,7 @@ function serverSmells(tools: readonly Tool[]) {
       const nameSimilarity = jaccard(nameParts[i] as Set<string>, nameParts[k] as Set<string>);
       if (similarity >= 0.6 || (nameSimilarity >= 0.66 && similarity >= 0.35)) {
         pairs.push({
-          severity: "major",
+          severity: "minor",
           code: "confusable_pair",
           tools: [a.name, b.name],
           similarity: roundHalfEven(similarity, 2),
@@ -160,7 +162,7 @@ function serverSmells(tools: readonly Tool[]) {
   pairs.sort((x, y) => y.similarity - x.similarity);
   serverIssues.push(...pairs.slice(0, SHOWN_PAIRS));
   if (pairs.length > SHOWN_PAIRS) {
-    serverIssues.push({ severity: "major", code: "confusable_pair_total", total: pairs.length });
+    serverIssues.push({ severity: "minor", code: "confusable_pair_total", total: pairs.length });
   }
 
   const namesByDescription = new Map<string, string[]>();

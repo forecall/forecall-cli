@@ -26,22 +26,24 @@ const ISSUES: (ToolIssue | ServerIssue)[] = [
   { severity: "major", code: "too_many_tools", count: 41 },
   { severity: "minor", code: "many_tools", count: 29 },
   {
-    severity: "major",
+    severity: "minor",
     code: "confusable_pair",
     tools: ["x", "y"],
     similarity: 0.88,
     nameSimilarity: 0.33,
   },
-  { severity: "major", code: "confusable_pair_total", total: 57 },
+  { severity: "minor", code: "confusable_pair_total", total: 57 },
   { severity: "critical", code: "identical_description", tools: ["p", "q"] },
   { severity: "major", code: "repeated_note", tools: 7, words: 150, excerpt: "IMPORTANT - …" },
   { severity: "minor", code: "instructions_long", length: 2904 },
   { severity: "minor", code: "instructions_missing" },
+  { severity: "minor", code: "deprecated" },
+  { severity: "minor", code: "id_source_missing", params: ["page_id", "parent"] },
 ];
 
 describe("issueMessage", () => {
-  it("covers all 24 issue codes", () => {
-    expect(new Set(ISSUES.map((issue) => issue.code)).size).toBe(24);
+  it("covers all 26 issue codes", () => {
+    expect(new Set(ISSUES.map((issue) => issue.code)).size).toBe(26);
     expect(ISSUES.map((issue) => issue.code).toSorted()).toEqual(
       Object.keys(ISSUE_CODES).toSorted(),
     );
