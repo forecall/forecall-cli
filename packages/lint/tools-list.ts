@@ -63,8 +63,26 @@ export interface Handshake {
 }
 
 export type ToolsListResult =
-  | { ok: true; tools: Tool[]; handshake?: Handshake }
+  | {
+      ok: true;
+      tools: Tool[];
+      handshake?: Handshake;
+      /**
+       * "entries" when the input was a list of entries rather than a tools/list (search results,
+       * endpoints: forecall-cli#18), read into tools and scored the same way.
+       */
+      shape?: "entries";
+    }
   | { ok: false; error: ToolsListError };
+
+/** The keys an entries list may sit under, besides a bare array. */
+const ENTRY_LIST_KEYS = ["entries", "results", "items", "endpoints"];
+/** What names an entry, in order of preference; `path` is prefixed with `method` when present. */
+const ENTRY_NAME_KEYS = ["name", "operationId", "id", "title", "path"];
+/** What describes an entry, in order of preference. */
+const ENTRY_DESCRIPTION_KEYS = ["description", "summary", "text", "snippet"];
+/** Where an entry's arguments are: a JSON schema object, or an OpenAPI-style parameters array. */
+const ENTRY_SCHEMA_KEYS = ["inputSchema", "parameters", "params"];
 
 /** Checks the size of the pasted text, parses it and reads it with readToolsList. */
 export function parseToolsList(text: string): ToolsListResult {
@@ -87,14 +105,20 @@ export function parseToolsList(text: string): ToolsListResult {
 /**
  * Reads parsed JSON: extracts the tools, checks the count and the key spelling, then checks each
  * tool's field types. null is treated as an absent field; fields Forecall does not read are dropped.
+ * A list of entries that is not a tools/list (forecall-cli#18) is read by readEntries instead.
  */
 export function readToolsList(data: unknown): ToolsListResult {
   const extracted = extractTools(data);
-  if (!extracted.ok) return extracted;
+  if (!extracted.ok) {
+    const entries = extractEntries(data);
+    return entries.ok ? readEntries(entries.entries) : extracted;
+  }
   const raw = extracted.tools;
   if (raw.length > MAX_TOOLS) {
     return { ok: false, error: { code: "too_many_tools", count: raw.length, limit: MAX_TOOLS } };
   }
+  // A bare array or {"tools": […]} whose elements are not tools but entries; a dump never is.
+  if (extracted.handshake === undefined && raw.some(isEntry)) return readEntries(raw);
   const keys = findSnakeCaseKeys(raw);
   if (keys.length > 0) return { ok: false, error: { code: "snake_case_keys", keys } };
 
@@ -133,6 +157,114 @@ export function extractTools(
     }
   }
   return { ok: false, error: { code: "unrecognized_shape" } };
+}
+
+/**
+ * A list of entries under one of ENTRY_LIST_KEYS (a bare array is tried as tools first, and read
+ * as entries when its elements are entries).
+ */
+export function extractEntries(
+  data: unknown,
+): { ok: true; entries: unknown[] } | { ok: false; error: { code: "unrecognized_shape" } } {
+  if (isObject(data)) {
+    for (const key of ENTRY_LIST_KEYS) {
+      const list = data[key];
+      if (Array.isArray(list)) return { ok: true, entries: list };
+    }
+  }
+  return { ok: false, error: { code: "unrecognized_shape" } };
+}
+
+/**
+ * An element that is not a tool but an entry: named by something other than `name`, or described
+ * by something other than `description`. A tool (name, description) is never an entry.
+ */
+export function isEntry(value: unknown): boolean {
+  if (!isObject(value)) return false;
+  const named = typeof value.name === "string" && value.name !== "";
+  const described = typeof value.description === "string";
+  const has = (keys: readonly string[]) =>
+    keys.some((key) => typeof value[key] === "string" && value[key] !== "");
+  return (!named && has(ENTRY_NAME_KEYS)) || (!described && has(ENTRY_DESCRIPTION_KEYS));
+}
+
+/**
+ * Reads a list of entries (search results, endpoints) into tools: each entry's name comes from
+ * the first of ENTRY_NAME_KEYS it has (a `path` with `method` in front), its description from the
+ * first of ENTRY_DESCRIPTION_KEYS, and its arguments from the first of ENTRY_SCHEMA_KEYS, an
+ * OpenAPI-style parameters array becoming an object schema. Names made the same get _2, _3, ….
+ * The entries are then scored exactly as tools with that text would be.
+ */
+export function readEntries(raw: readonly unknown[]): ToolsListResult {
+  if (raw.length > MAX_TOOLS) {
+    return { ok: false, error: { code: "too_many_tools", count: raw.length, limit: MAX_TOOLS } };
+  }
+  const tools: Tool[] = [];
+  const taken = new Map<string, number>();
+  for (const [index, value] of raw.entries()) {
+    const path = `entries[${index}]`;
+    if (!isObject(value)) return { ok: false, error: invalid(path, "object") };
+    const named = entryName(value);
+    if (named === undefined)
+      return { ok: false, error: invalid(`${path}.name`, "non-empty string") };
+    const count = (taken.get(named) ?? 0) + 1;
+    taken.set(named, count);
+    const tool: Record<string, unknown> = { name: count === 1 ? named : `${named}_${count}` };
+    const description = firstString(value, ENTRY_DESCRIPTION_KEYS);
+    if (description !== undefined) tool.description = description;
+    const schema = entrySchema(value);
+    if (schema !== undefined) tool.inputSchema = schema;
+    tools.push(tool as unknown as Tool);
+  }
+  return { ok: true, tools, shape: "entries" };
+}
+
+function firstString(value: Record<string, unknown>, keys: readonly string[]): string | undefined {
+  for (const key of keys) {
+    const found = value[key];
+    if (typeof found === "string" && found !== "") return found;
+  }
+  return undefined;
+}
+
+function entryName(value: Record<string, unknown>): string | undefined {
+  const name = firstString(value, ENTRY_NAME_KEYS);
+  if (name === undefined) return undefined;
+  const method = value.method;
+  // A path is named with its method, so that GET and DELETE of one path stay apart.
+  return name === value.path && typeof method === "string" && method !== ""
+    ? `${method.toUpperCase()} ${name}`
+    : name;
+}
+
+/** An entry's arguments as a JSON schema object, or undefined when it has none. */
+function entrySchema(value: Record<string, unknown>): Record<string, unknown> | undefined {
+  for (const key of ENTRY_SCHEMA_KEYS) {
+    const found = value[key];
+    if (isObject(found)) return found;
+    if (Array.isArray(found)) return parametersSchema(found);
+  }
+  return undefined;
+}
+
+/** OpenAPI-style parameters ({name, description, required, schema}) as one object schema. */
+function parametersSchema(parameters: readonly unknown[]): Record<string, unknown> {
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+  for (const parameter of parameters) {
+    if (!isObject(parameter) || typeof parameter.name !== "string" || parameter.name === "") {
+      continue;
+    }
+    const property: Record<string, unknown> = isObject(parameter.schema)
+      ? { ...parameter.schema }
+      : {};
+    if (typeof parameter.description === "string") property.description = parameter.description;
+    properties[parameter.name] = property;
+    if (parameter.required === true) required.push(parameter.name);
+  }
+  return required.length > 0
+    ? { type: "object", properties, required }
+    : { type: "object", properties };
 }
 
 export function findSnakeCaseKeys(tools: readonly unknown[]): SnakeCaseKey[] {

@@ -127,7 +127,7 @@ describe("readToolsList: tool count", () => {
   });
 
   it("rejects an unrecognized shape", () => {
-    expect(errorOf(readToolsList({ items: tools }))).toEqual({ code: "unrecognized_shape" });
+    expect(errorOf(readToolsList({ list: tools }))).toEqual({ code: "unrecognized_shape" });
   });
 });
 
@@ -285,6 +285,144 @@ describe("readToolsList: field types", () => {
     expect(readToolsList([{ name: "t", annotations: null }])).toStrictEqual({
       ok: true,
       tools: [{ name: "t" }],
+    });
+  });
+});
+
+// A list of entries that is not a tools/list: search results, endpoints (forecall-cli#18).
+describe("readToolsList: entries", () => {
+  const endpoints = [
+    {
+      method: "get",
+      path: "/users/{id}",
+      summary: "Read one user.",
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string" },
+          description: "The user's id.",
+        },
+        { name: "expand", in: "query", schema: { type: "boolean" } },
+        { in: "header" },
+      ],
+    },
+    { method: "delete", path: "/users/{id}", summary: "Remove a user." },
+  ];
+
+  it("reads endpoints under their method and path, with the parameters as a schema", () => {
+    expect(readToolsList({ endpoints })).toEqual({
+      ok: true,
+      shape: "entries",
+      tools: [
+        {
+          name: "GET /users/{id}",
+          description: "Read one user.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "The user's id." },
+              expand: { type: "boolean" },
+            },
+            required: ["id"],
+          },
+        },
+        { name: "DELETE /users/{id}", description: "Remove a user." },
+      ],
+    });
+  });
+
+  const results = [
+    { id: "r1", snippet: "First." },
+    { id: "r2", text: "Second." },
+  ];
+  it.each([
+    ["a bare array of results", results],
+    ["results under results", { results }],
+    [
+      "items under items",
+      {
+        items: [
+          { title: "r1", summary: "First." },
+          { title: "r2", summary: "Second." },
+        ],
+      },
+    ],
+  ])("reads %s", (_, data) => {
+    expect(readToolsList(data)).toMatchObject({
+      ok: true,
+      shape: "entries",
+      tools: [
+        { name: "r1", description: "First." },
+        { name: "r2", description: "Second." },
+      ],
+    });
+  });
+
+  it("prefers name, then operationId, id, title and path; a schema object is taken as is", () => {
+    const result = readToolsList({
+      entries: [
+        { name: "a", operationId: "opA", summary: "A." },
+        { operationId: "opB", id: "b", summary: "B.", params: { type: "object", properties: {} } },
+        { title: "C", path: "/c", text: "C.", inputSchema: { type: "object" }, parameters: [] },
+        { path: "/d", snippet: "D." },
+      ],
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      tools: [
+        { name: "a", description: "A." },
+        { name: "opB", description: "B.", inputSchema: { type: "object", properties: {} } },
+        { name: "C", description: "C.", inputSchema: { type: "object" } },
+        { name: "/d", description: "D." },
+      ],
+    });
+  });
+
+  it("keeps entries of the same name apart with _2, _3", () => {
+    const result = readToolsList({ results: [{ id: "x" }, { id: "x" }, { id: "x" }] });
+    expect(result.ok && result.tools.map((tool) => tool.name)).toEqual(["x", "x_2", "x_3"]);
+  });
+
+  it("reads a tools/list as tools, and a list with one entry in it as entries", () => {
+    expect(readToolsList(tools)).toEqual({ ok: true, tools });
+    expect(readToolsList({ tools })).toEqual({ ok: true, tools });
+    // A tool beside an entry is read as the entry it also is.
+    const mixed = readToolsList([tool, { id: "r1", snippet: "First." }]);
+    expect(mixed).toMatchObject({ ok: true, shape: "entries" });
+    expect(mixed.ok && mixed.tools[1]).toEqual({ name: "r1", description: "First." });
+    // A dump is always a tools/list.
+    expect(readToolsList({ server: { name: "x" }, tools: [{ id: "r1" }] })).toMatchObject({
+      ok: false,
+      error: { code: "invalid_tool", path: "tools[0].name" },
+    });
+  });
+
+  it("rejects an entry with no name, a non-object entry and too many entries", () => {
+    expect(errorOf(readToolsList({ results: [{ id: "r1" }, { snippet: "no name" }] }))).toEqual({
+      code: "invalid_tool",
+      path: "entries[1].name",
+      expected: "non-empty string",
+    });
+    expect(errorOf(readToolsList({ results: [{ id: "r1" }, 5] }))).toEqual({
+      code: "invalid_tool",
+      path: "entries[1]",
+      expected: "object",
+    });
+    const many = Array.from({ length: MAX_TOOLS + 1 }, (_, i) => ({ id: `r${i}` }));
+    expect(errorOf(readToolsList({ results: many }))).toEqual({
+      code: "too_many_tools",
+      count: MAX_TOOLS + 1,
+      limit: MAX_TOOLS,
+    });
+    expect(errorOf(readToolsList({ foo: [] }))).toEqual({ code: "unrecognized_shape" });
+  });
+
+  it("does not report snake_case keys in entries, whose keys are their own", () => {
+    expect(readToolsList({ results: [{ id: "r1", input_schema: {} }] })).toMatchObject({
+      ok: true,
+      shape: "entries",
     });
   });
 });

@@ -68,16 +68,23 @@ export function sortTools(tools: ToolScore[]): ToolScore[] {
 /** The whole report as lines of text, ending with a newline. */
 export function formatReport(
   report: LintReport,
-  { lang, source, style: s }: { lang: Lang; source: string; style: Style },
+  {
+    lang,
+    source,
+    style: s,
+    shape,
+  }: { lang: Lang; source: string; style: Style; shape?: "entries" },
 ): string {
   const lines: string[] = [];
   const file = source === "-" ? t(lang, "cli.stdin") : source;
   lines.push(s.bold(`${brand.name} lint · ${file}`));
   lines.push(`${t(lang, "result.meta.rules")} v${report.lintVersion}`, "");
 
+  // A list of entries (search results, endpoints) is scored as tools but named as entries.
+  const what = shape === "entries" ? "entries" : "tools";
   const summary: [string, string][] = [
     [t(lang, "result.summary.average"), `${report.scoreAvg.toFixed(1)} / 100`],
-    [t(lang, "result.summary.tools"), String(report.toolCount)],
+    [t(lang, `result.summary.${what}`), String(report.toolCount)],
     [t(lang, "result.summary.pairs"), String(report.confusablePairsTotal)],
   ];
   const labelWidth = Math.max(...summary.map(([label]) => width(label)));
@@ -104,7 +111,7 @@ export function formatReport(
   if (report.serverIssues.length === 0) lines.push(`  ${t(lang, "result.server.none")}`);
   issueLines(report.serverIssues, "  ");
 
-  lines.push("", s.bold(t(lang, "result.tools.heading")));
+  lines.push("", s.bold(t(lang, `result.${what}.heading`)));
   for (const tool of sortTools(report.tools)) {
     lines.push("", `  ${s.bold(`${tool.score} / 100`)}  ${tool.name}`);
     const components = COMPONENTS.map(

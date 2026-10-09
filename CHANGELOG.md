@@ -39,6 +39,9 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `forecall`
 
+- 0.8.0 (2026-10-09, forecall-cli#18): `lint` also reads a list of entries that is not a
+  tools/list, such as what a search tool returns or a list of endpoints, and scores it as
+  entries (see `@forecall/lint` 0.4.0). Rules stay v2.
 - 0.7.0 (2026-10-09): with `@forecall/lint` 0.3.0, `--fail-on major` no longer trips on
   near-identical descriptions (now minor), and the report shows the two new findings.
 - 0.6.1 (2026-10-09): the summary's "Confusable pairs" line is "Near-identical descriptions",
@@ -57,6 +60,15 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `@forecall/lint`
 
+- 0.4.0 (2026-10-09, forecall-cli#18): `parseToolsList` and `readToolsList` also read a list of
+  entries that is not a tools/list (`{"entries" | "results" | "items" | "endpoints": [...]}`, or
+  a bare array whose elements are entries): each entry is named by its `name`, `operationId`,
+  `id`, `title` or `path` (with its `method` in front), described by its `description`,
+  `summary`, `text` or `snippet`, and given its arguments from a schema object or an
+  OpenAPI-style `parameters` array; names made the same get `_2`, `_3`, …. The result says
+  `shape: "entries"`. The entries are scored exactly as tools with that text would be, so the
+  rules stay v2. Asked for on dev.to: scoring the candidates an agent picks from at run time
+  (forecall/forecall#466).
 - 0.3.0 (2026-10-09, forecall-cli#16): from the calibration of 2026-10-09 (forecall/forecall#448:
   868 one-step cases on nine servers, two models), where no ambiguous case went to the pair's
   other tool and 72% of the misses were a lookup first.
