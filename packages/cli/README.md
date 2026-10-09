@@ -29,6 +29,12 @@ A JSON file of up to 1 MiB and 200 tools, in one of these shapes:
 - an array of tools: `[{"name": ...}, ...]`
 - a `tools/list` result: `{"tools": [...]}`
 - a JSON-RPC response: `{"result": {"tools": [...]}}`
+- a list of entries that is not a tools/list, such as what a search tool returns or a list of
+  endpoints: `{"entries": [...]}` (or `results`, `items`, `endpoints`, or a bare array), each
+  entry with a `name`, `operationId`, `id`, `title` or `path` (named with its `method`) and a
+  `description`, `summary`, `text` or `snippet`, and optionally its arguments as a schema object
+  or an OpenAPI-style `parameters` array. The entries are scored exactly as tools with the same
+  text would be, and the report calls them entries.
 
 Keys must use the MCP wire format (`inputSchema`, `annotations.readOnlyHint`). snake_case keys
 such as `input_schema`, which some SDKs write out, are reported rather than converted.

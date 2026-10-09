@@ -31,8 +31,13 @@ if (result.ok) {
   `{ ok: true, report }`, or `{ ok: false, error }` when the text cannot be read. A file written
   by `forecall dump` also carries the server's `instructions`, which are checked too (a bare
   tools/list cannot say whether the server has any).
-- `parseToolsList(text)`: the reading alone. Returns `{ ok: true, tools, handshake? }` or
-  `{ ok: false, error }`; `handshake` is there for a dump.
+- `parseToolsList(text)`: the reading alone. Returns `{ ok: true, tools, handshake?, shape? }` or
+  `{ ok: false, error }`; `handshake` is there for a dump. A list of entries that is not a
+  tools/list, such as search results or endpoints (`{ "entries" | "results" | "items" |
+  "endpoints": [...] }`, or a bare array, each element with a `name`, `operationId`, `id`,
+  `title` or `path` and a `description`, `summary`, `text` or `snippet`; an OpenAPI-style
+  `parameters` array or a schema object as the arguments), is read into tools and scored the
+  same way, with `shape: "entries"`.
 - `LINT_VERSION`: the version of the scoring rules. Compare scores only within one version; what
   each version changed is in the repository's
   [CHANGELOG.md](https://github.com/forecall/forecall-cli/blob/main/CHANGELOG.md).

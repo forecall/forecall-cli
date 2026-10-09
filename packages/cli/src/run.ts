@@ -40,6 +40,9 @@ Scores the tool descriptions in an MCP tools/list result, on this machine. Nothi
 anywhere. <file> holds an array of tools, {"tools": [...]}, or a JSON-RPC response
 {"result": {"tools": [...]}}, up to 1 MiB and 200 tools. Use - to read standard input. A file
 written by "forecall dump" also carries the server's instructions, which are checked too.
+A list of entries that is not a tools/list, such as search results or endpoints
+({"entries" | "results" | "items" | "endpoints": [...]}, each with a name, id, title or path
+and a description, summary, text or snippet), is scored the same way, as entries.
 
 Options:
   --json                Print the report as JSON (the same report the web app stores)
@@ -136,11 +139,14 @@ async function lint(args: string[], io: Io): Promise<number> {
     io.stdout(`${JSON.stringify(report, null, 2)}\n`);
   } else {
     const s = style(io.isTTY, io.env.NO_COLOR);
-    io.stdout(formatReport(report, { lang, source, style: s }));
+    io.stdout(formatReport(report, { lang, source, style: s, shape: input.shape }));
   }
   // A bare tools/list says nothing about the server's instructions, so neither does the report;
   // a dump would. Said on standard error, so that --json's standard output stays the report alone.
-  if (input.handshake === undefined) io.stderr(`forecall: ${t(lang, "cli.note.noInstructions")}\n`);
+  // A list of entries has no server, so nothing is said.
+  if (input.handshake === undefined && input.shape === undefined) {
+    io.stderr(`forecall: ${t(lang, "cli.note.noInstructions")}\n`);
+  }
   const failed = failedGates(report, { failUnder, minToolScore, failOn }, lang);
   for (const sentence of failed) io.stderr(`forecall: ${sentence}\n`);
   return failed.length > 0 ? EXIT.belowThreshold : EXIT.ok;

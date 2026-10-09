@@ -11,9 +11,12 @@ export type InputError =
   | { code: "not_found"; file: string }
   | { code: "unreadable"; file: string; reason: string };
 
-/** The tools, and the server's handshake when the input is a `forecall dump` file. */
+/**
+ * The tools, the server's handshake when the input is a `forecall dump` file, and `shape` when
+ * the input was a list of entries rather than a tools/list.
+ */
 export type InputResult =
-  | { ok: true; tools: Tool[]; handshake?: Handshake }
+  | { ok: true; tools: Tool[]; handshake?: Handshake; shape?: "entries" }
   | { ok: false; error: InputError };
 
 /**
