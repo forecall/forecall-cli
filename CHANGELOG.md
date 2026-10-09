@@ -39,6 +39,8 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `forecall`
 
+- 0.8.1 (2026-10-09, forecall-cli#20): with `@forecall/lint` 0.4.1, an entry's derived name
+  fits a tool's name, so an endpoint list no longer gets `bad_name_chars` on every entry.
 - 0.8.0 (2026-10-09, forecall-cli#18): `lint` also reads a list of entries that is not a
   tools/list, such as what a search tool returns or a list of endpoints, and scores it as
   entries (see `@forecall/lint` 0.4.0). Rules stay v2.
@@ -60,6 +62,10 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `@forecall/lint`
 
+- 0.4.1 (2026-10-09, forecall-cli#20): an entry's name is a slug of what names it (runs of
+  characters outside letters, digits, `_`, `-` and `.` become one `_`; `GET /users/{id}` is
+  `GET_users_id`), with the original kept as the entry's `title`. 0.4.0 named it as is, so every
+  endpoint got a Major `bad_name_chars` the user could not fix. Rules unchanged (v2).
 - 0.4.0 (2026-10-09, forecall-cli#18): `parseToolsList` and `readToolsList` also read a list of
   entries that is not a tools/list (`{"entries" | "results" | "items" | "endpoints": [...]}`, or
   a bare array whose elements are entries): each entry is named by its `name`, `operationId`,
