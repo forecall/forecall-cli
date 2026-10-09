@@ -190,10 +190,11 @@ export function isEntry(value: unknown): boolean {
 
 /**
  * Reads a list of entries (search results, endpoints) into tools: each entry's name comes from
- * the first of ENTRY_NAME_KEYS it has (a `path` with `method` in front), its description from the
- * first of ENTRY_DESCRIPTION_KEYS, and its arguments from the first of ENTRY_SCHEMA_KEYS, an
- * OpenAPI-style parameters array becoming an object schema. Names made the same get _2, _3, ….
- * The entries are then scored exactly as tools with that text would be.
+ * the first of ENTRY_NAME_KEYS it has (a `path` with `method` in front), made a slug that fits a
+ * tool's name (slugName; the original is kept as the title), its description from the first of
+ * ENTRY_DESCRIPTION_KEYS, and its arguments from the first of ENTRY_SCHEMA_KEYS, an OpenAPI-style
+ * parameters array becoming an object schema. Names made the same get _2, _3, …. The entries are
+ * then scored exactly as tools with that text would be.
  */
 export function readEntries(raw: readonly unknown[]): ToolsListResult {
   if (raw.length > MAX_TOOLS) {
@@ -207,9 +208,11 @@ export function readEntries(raw: readonly unknown[]): ToolsListResult {
     const named = entryName(value);
     if (named === undefined)
       return { ok: false, error: invalid(`${path}.name`, "non-empty string") };
-    const count = (taken.get(named) ?? 0) + 1;
-    taken.set(named, count);
-    const tool: Record<string, unknown> = { name: count === 1 ? named : `${named}_${count}` };
+    const slug = slugName(named);
+    const count = (taken.get(slug) ?? 0) + 1;
+    taken.set(slug, count);
+    const tool: Record<string, unknown> = { name: count === 1 ? slug : `${slug}_${count}` };
+    if (named !== slug) tool.title = named;
     const description = firstString(value, ENTRY_DESCRIPTION_KEYS);
     if (description !== undefined) tool.description = description;
     const schema = entrySchema(value);
@@ -217,6 +220,16 @@ export function readEntries(raw: readonly unknown[]): ToolsListResult {
     tools.push(tool as unknown as Tool);
   }
   return { ok: true, tools, shape: "entries" };
+}
+
+/**
+ * What names an entry, as a tool's name (forecall-cli#20): runs of characters outside a name's
+ * (letters, digits, _ - .) become one _, cut at both ends; nothing left is "entry". A derived
+ * name such as "GET /users/{id}" would otherwise be a bad_name_chars finding the user cannot fix.
+ */
+export function slugName(name: string): string {
+  const slug = name.replace(/[^A-Za-z0-9_.-]+/g, "_").replace(/^_+|_+$/g, "");
+  return slug === "" ? "entry" : slug;
 }
 
 function firstString(value: Record<string, unknown>, keys: readonly string[]): string | undefined {

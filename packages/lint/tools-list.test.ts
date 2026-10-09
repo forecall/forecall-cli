@@ -317,7 +317,8 @@ describe("readToolsList: entries", () => {
       shape: "entries",
       tools: [
         {
-          name: "GET /users/{id}",
+          name: "GET_users_id",
+          title: "GET /users/{id}",
           description: "Read one user.",
           inputSchema: {
             type: "object",
@@ -328,9 +329,30 @@ describe("readToolsList: entries", () => {
             required: ["id"],
           },
         },
-        { name: "DELETE /users/{id}", description: "Remove a user." },
+        { name: "DELETE_users_id", title: "DELETE /users/{id}", description: "Remove a user." },
       ],
     });
+  });
+
+  // forecall-cli#20: a derived name fits a tool's name, so that it is not a bad_name_chars finding.
+  it.each([
+    ["GET /users/{id}", "GET_users_id"],
+    ["Design review (Q3)", "Design_review_Q3"],
+    ["docs/getting-started.md", "docs_getting-started.md"],
+    ["already_fine-1.2", "already_fine-1.2"],
+    ["日本語だけ", "entry"],
+  ])("names %s as %s, keeping the original as the title", (raw, slug) => {
+    const result = readToolsList({ results: [{ id: raw, snippet: "X." }] });
+    expect(result.ok && result.tools[0]).toEqual(
+      raw === slug
+        ? { name: slug, description: "X." }
+        : { name: slug, title: raw, description: "X." },
+    );
+  });
+
+  it("keeps entries whose names slug the same apart", () => {
+    const result = readToolsList({ results: [{ id: "a b" }, { id: "a/b" }, { id: "a_b" }] });
+    expect(result.ok && result.tools.map((tool) => tool.name)).toEqual(["a_b", "a_b_2", "a_b_3"]);
   });
 
   const results = [
@@ -375,7 +397,7 @@ describe("readToolsList: entries", () => {
         { name: "a", description: "A." },
         { name: "opB", description: "B.", inputSchema: { type: "object", properties: {} } },
         { name: "C", description: "C.", inputSchema: { type: "object" } },
-        { name: "/d", description: "D." },
+        { name: "d", title: "/d", description: "D." },
       ],
     });
   });

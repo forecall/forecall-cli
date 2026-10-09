@@ -37,7 +37,8 @@ if (result.ok) {
   "endpoints": [...] }`, or a bare array, each element with a `name`, `operationId`, `id`,
   `title` or `path` and a `description`, `summary`, `text` or `snippet`; an OpenAPI-style
   `parameters` array or a schema object as the arguments), is read into tools and scored the
-  same way, with `shape: "entries"`.
+  same way, with `shape: "entries"`. The name is made a slug that fits a tool's name, the
+  original kept as the `title`.
 - `LINT_VERSION`: the version of the scoring rules. Compare scores only within one version; what
   each version changed is in the repository's
   [CHANGELOG.md](https://github.com/forecall/forecall-cli/blob/main/CHANGELOG.md).

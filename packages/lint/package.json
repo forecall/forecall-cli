@@ -1,7 +1,7 @@
 {
   "name": "@forecall/lint",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Score the tool descriptions of an MCP tools/list for the AI agents that read them.",
   "keywords": [
     "mcp",
