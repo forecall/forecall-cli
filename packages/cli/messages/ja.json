@@ -16,7 +16,7 @@
   "lint.error.snakeCaseKeys": "snake_case のキーがあります。MCP の通信形式は camelCase なので、下のように書き換えてください。Python の SDK で出力した JSON によくある書き方です。",
   "result.summary.tools": "ツールの数",
   "result.summary.average": "平均点",
-  "result.summary.pairs": "取り違えやすい組",
+  "result.summary.pairs": "説明がほぼ同じ組",
   "result.meta.rules": "採点の規則",
   "result.server.heading": "サーバー全体",
   "result.server.none": "サーバー全体の指摘はありません。",
@@ -34,5 +34,5 @@
   "result.severity.major": "要対応",
   "result.severity.minor": "軽微",
   "result.limits.heading": "静的な採点で分からないこと",
-  "result.limits.body": "この点数は、説明文とスキーマの文字だけを読んで付けています。browser_close のように、短くても名前で意味が明らかなツールは、実際にはモデルが正しく使えていても低く出ます。実際のモデルが正しく選び、正しく呼べる割合は、Pro と Team のプランの評価で測れます。"
+  "result.limits.body": "この点数は、説明文とスキーマの文字だけを読んで付けています。書かれているかどうかを示すもので、モデルがどう動くかではありません。browser_close のように、短くても名前で意味が明らかなツールは、実際にはモデルが正しく使えていても低く出ます。私たちの計測でも、名前とスキーマが違えば、いまのモデルは 1 行の説明文からでも 1 手で正しいツールを選びました。文字からは分からないこと（数手にわたる動き、書き足した一文が助けになるか誤らせるか）は、Pro と Team のプランの評価で測れます。"
 }

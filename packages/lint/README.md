@@ -2,8 +2,8 @@
 
 Scores how well the tools of an MCP server are described for the AI agents that read them: each
 tool out of 100 on its purpose, when to use it, its arguments, its return value, its constraints
-and examples, and the server as a whole (too many tools, tools easy to mix up, shared
-descriptions). It is the linter behind [forecall.dev](https://forecall.dev/en/lint) and the
+and examples, and the server as a whole (too many tools, near-identical
+descriptions, shared descriptions). It is the linter behind [forecall.dev](https://forecall.dev/en/lint) and the
 [`forecall`](https://www.npmjs.com/package/forecall) command, and runs anywhere JavaScript does,
 with no dependencies and no network.
 

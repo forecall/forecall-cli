@@ -39,6 +39,11 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `forecall`
 
+- 0.6.1 (2026-10-09): the summary's "Confusable pairs" line is "Near-identical descriptions",
+  and the note on what static scoring cannot tell says the score reads what is written, not
+  what a model will do: measured on 2026-10-09, current models chose the right tool in one step
+  from one-line descriptions and between near-identical pairs when names and schemas differed.
+  Wording only; rules stay v2.
 - 0.6.0 (2026-10-09): scoring rules v2; `lint` reads the server's instructions from a dump and
   says on standard error when a bare tools/list carries none.
 - 0.5.0 (2026-10-08): `--min-tool-score <n>` and `--fail-on <severity>` gates; each failed gate
@@ -50,6 +55,9 @@ only within one version of the rules; every report and `forecall --version` show
 
 ## `@forecall/lint`
 
+- 0.2.1 (2026-10-09): the `confusable_pair` and `confusable_pair_total` sentences say the
+  descriptions are nearly the same and only the names and schemas differ, instead of "easy to
+  mix up". Wording only; the code and the rules (v2) are unchanged.
 - 0.2.0 (2026-10-09): scoring rules v2; `parseToolsList` returns the dump's `handshake`;
   `lintTools` takes `{ handshake }`; `Handshake` and `LintOptions` types.
 - 0.1.2 (2026-10-08): the `confusable_pair` sentence. 0.1.1: plural forms in the English

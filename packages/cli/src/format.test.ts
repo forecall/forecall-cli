@@ -55,13 +55,13 @@ describe("formatReport", () => {
 
   it("aligns the summary", () => {
     expect(text).toContain(
-      "Average score     50.0 / 100\nTools             3\nConfusable pairs  1\n",
+      "Average score                50.0 / 100\nTools                        3\nNear-identical descriptions  1\n",
     );
   });
 
   it("shows the pair's similarities under it", () => {
     expect(text).toContain(
-      "  Major     confusable_pair  a_tool and b_tool are easy to mix up. In each description, say when to use the other one instead.\n" +
+      "  Major     confusable_pair  a_tool and b_tool have nearly the same description; only the names and schemas tell them apart. In each description, say when to use the other one instead.\n" +
         "                             Description similarity 0.80 · Name similarity 0.50\n",
     );
   });
