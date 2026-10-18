@@ -99,7 +99,7 @@ show which.
 
 ## GitHub Action (`forecall/forecall-cli@v1`)
 
-### v1.0.0 — not released yet (`forecall` 0.8.1)
+### v1.0.0 — 2026-10-18 (`forecall` 0.8.1)
 
 - Scores a tools/list file, a public Streamable HTTP URL or a server a command starts over stdio,
   with the CLI from npm at the pinned version, and writes the score and the findings to the job
