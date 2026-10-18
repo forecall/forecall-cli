@@ -1,0 +1,27 @@
+{
+  "tools": [
+    {
+      "name": "search",
+      "description": "Search records.",
+      "inputSchema": { "type": "object", "properties": { "q": { "type": "string" } } }
+    },
+    {
+      "name": "get_forecast",
+      "description": "Returns the weather forecast for a city for the next 7 days, with the high and low temperature in Celsius for each day. Use it when the user asks about upcoming weather; for the current conditions, use get_current_weather instead. Example: city \"Tokyo\", days 3.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string", "description": "The city's name, such as Tokyo." },
+          "days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7,
+            "description": "How many days to return, 1 to 7."
+          }
+        },
+        "required": ["city"]
+      },
+      "annotations": { "readOnlyHint": true }
+    }
+  ]
+}

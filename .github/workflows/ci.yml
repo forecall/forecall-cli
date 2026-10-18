@@ -62,3 +62,51 @@ jobs:
           scripts/try-package.sh cli "$CLI"
           mise exec node@22 -- scripts/try-package.sh lint "$LINT"
           mise exec node@22 -- scripts/try-package.sh cli "$CLI"
+
+  # The action as users run it (action.yml, ADR-0056 in forecall/forecall), with the CLI from npm at
+  # the action's pinned version: from a file and from a server a command starts, and a gate that
+  # fails must fail the step.
+  action:
+    name: action
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        with:
+          install_args: node
+
+      - name: From a file
+        id: file
+        uses: ./
+        with:
+          file: action/test/tools.json
+          min-tool-score: 0
+
+      - name: From a command
+        uses: ./
+        with:
+          command: node packages/cli/test/fake-stdio-server.mjs
+
+      - name: A gate that fails
+        id: gate
+        continue-on-error: true
+        uses: ./
+        with:
+          file: action/test/tools.json
+          fail-under: 100
+
+      - name: Check the outputs and the failed gate
+        env:
+          SCORE: ${{ steps.file.outputs.score }}
+          TOOLS: ${{ steps.file.outputs.tools }}
+          REPORT: ${{ steps.file.outputs.report }}
+          GATE: ${{ steps.gate.outcome }}
+        run: |
+          test -n "$SCORE"
+          test "$TOOLS" = "2"
+          test -s "$REPORT"
+          test "$GATE" = "failure"
