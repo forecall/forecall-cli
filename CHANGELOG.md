@@ -1,7 +1,8 @@
 # Changelog
 
-What changed in each version of the scoring rules and of the two packages. Scores are comparable
-only within one version of the rules; every report and `forecall --version` show which.
+What changed in each version of the scoring rules, of the two packages and of the GitHub Action.
+Scores are comparable only within one version of the rules; every report and `forecall --version`
+show which.
 
 ## Scoring rules
 
@@ -95,3 +96,12 @@ only within one version of the rules; every report and `forecall --version` show
 - 0.1.2 (2026-10-08): the `confusable_pair` sentence. 0.1.1: plural forms in the English
   sentences.
 - 0.1.0 (2026-10-08): first version published from this repository.
+
+## GitHub Action (`forecall/forecall-cli@v1`)
+
+### v1.0.0 — not released yet (`forecall` 0.8.1)
+
+- Scores a tools/list file, a public Streamable HTTP URL or a server a command starts over stdio,
+  with the CLI from npm at the pinned version, and writes the score and the findings to the job
+  summary. The CLI's gates (`fail-under`, `min-tool-score`, `fail-on`) fail the step. Outputs:
+  `score`, `tools`, `report`. Nothing is sent to Forecall and no key is needed.

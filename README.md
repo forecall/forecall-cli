@@ -83,6 +83,32 @@ How to use them: [forecall.dev/en/docs/cli](https://forecall.dev/en/docs/cli) an
 README. The Forecall service itself (the website, the dashboard, the API and the Failure KB's
 server) is not in this repository.
 
+## GitHub Action
+
+Score your tools on every pull request, with the score and the findings in the job summary:
+
+```yaml
+- uses: forecall/forecall-cli@v1
+  with:
+    file: tools.json          # or url: https://… (a public Streamable HTTP server)
+                              # or command: node build/index.js (your server over stdio)
+    min-tool-score: 40        # optional gates, as in the CLI
+    fail-on: critical
+```
+
+| Input | What it does |
+|---|---|
+| `file` | A tools/list JSON file, as `forecall lint` reads it |
+| `url` | A public Streamable HTTP server to ask for its tools/list (`forecall dump <url>`) |
+| `command` | A command that starts your server over stdio (`forecall dump -- sh -c <command>`) |
+| `fail-under`, `min-tool-score`, `fail-on` | The CLI's gates: fail the step below an average, below a tool's score, or on a finding that severe |
+| `lang` | `en` or `ja` for the report in the log (the job summary is in English) |
+| `version` | The `forecall` version from npm (pinned by each release of the action) |
+
+Give exactly one of `file`, `url` and `command`. The outputs are `score` (the average), `tools`
+and `report` (the JSON report's path). It needs Node 22 or later on the runner, sends nothing to
+Forecall and needs no key.
+
 ## Development
 
 The versions of Node.js and pnpm are in `mise.toml`.
@@ -90,7 +116,7 @@ The versions of Node.js and pnpm are in `mise.toml`.
 ```sh
 mise install
 pnpm install
-pnpm check       # Biome, the type checks and the tests of both packages
+pnpm check       # Biome, the type checks and the tests of both packages and the action
 ```
 
 - `pnpm format` formats and fixes what Biome can.
@@ -108,6 +134,10 @@ A pull request that raises a package's version starts the Release workflow when 
 `main`. The workflow stages every version npm does not have yet (`@forecall/lint` first) with
 provenance, and each goes live only when a maintainer approves it on npm with 2FA. Maintainers can
 also run the workflow by hand on `main` and pick one package.
+
+The action is released apart from the packages: a maintainer publishes a GitHub Release `v1.x.y`
+to the Marketplace and moves the `v1` tag to it. A release that raises the action's pinned
+`forecall` version says so, since a new rules version can move scores past a gate.
 
 ## Contributing and security
 

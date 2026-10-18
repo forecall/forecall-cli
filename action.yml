@@ -1,0 +1,137 @@
+# Forecall lint as a GitHub Action (ADR-0056 in forecall/forecall): scores how well an MCP server's
+# tools are described, from a tools/list file, a public Streamable HTTP URL, or a server a command
+# starts, with the forecall CLI from npm at a pinned version. The score and the findings go to the
+# job summary; the CLI's gates fail the step. Nothing is sent to Forecall and no key is needed.
+# Inputs reach the shell through environment variables only, never pasted into a script.
+name: Forecall lint for MCP tools
+description: Score how well your MCP server's tool descriptions tell AI agents when and how to call each tool.
+author: Mirai Studio, Inc.
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  file:
+    description: A tools/list JSON file (an array of tools, {"tools":[...]}, a JSON-RPC response, or a file written by forecall dump)
+    required: false
+  url:
+    description: A public Streamable HTTP MCP server to ask for its tools/list (forecall dump <url>)
+    required: false
+  command:
+    description: A command that starts your MCP server over stdio, to ask for its tools/list (forecall dump -- sh -c <command>)
+    required: false
+  fail-under:
+    description: Fail when the average score is below this (0 to 100)
+    required: false
+  min-tool-score:
+    description: Fail when any tool scores below this (0 to 100)
+    required: false
+  fail-on:
+    description: Fail on any finding at this severity or worse (critical, major or minor)
+    required: false
+  lang:
+    description: Language of the report in the log (en or ja). The job summary is in English
+    required: false
+    default: en
+  version:
+    description: The forecall CLI version from npm
+    required: false
+    default: 0.8.1
+
+outputs:
+  score:
+    description: The average score out of 100
+    value: ${{ steps.summary.outputs.score }}
+  tools:
+    description: How many tools were scored
+    value: ${{ steps.summary.outputs.tools }}
+  report:
+    description: The path of the JSON report (the same report forecall.dev stores)
+    value: ${{ steps.summary.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get the tools/list
+      id: input
+      shell: bash
+      env:
+        INPUT_FILE: ${{ inputs.file }}
+        INPUT_URL: ${{ inputs.url }}
+        INPUT_COMMAND: ${{ inputs.command }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        if ! [[ "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "::error::version must be a forecall release such as 0.8.1"
+          exit 2
+        fi
+        major=$(node -p 'process.versions.node.split(".")[0]')
+        if [ "$major" -lt 22 ]; then
+          echo "::error::forecall needs Node 22 or later; add actions/setup-node with node-version 22 before this step"
+          exit 2
+        fi
+        given=0
+        for value in "$INPUT_FILE" "$INPUT_URL" "$INPUT_COMMAND"; do
+          if [ -n "$value" ]; then given=$((given + 1)); fi
+        done
+        if [ "$given" -ne 1 ]; then
+          echo "::error::Give exactly one of file, url or command"
+          exit 2
+        fi
+        dir="$RUNNER_TEMP/forecall-lint"
+        mkdir -p "$dir"
+        echo "dir=$dir" >> "$GITHUB_OUTPUT"
+        if [ -n "$INPUT_FILE" ]; then
+          { echo "tools=$INPUT_FILE"; echo "kind=file"; } >> "$GITHUB_OUTPUT"
+        elif [ -n "$INPUT_URL" ]; then
+          npx --yes "forecall@$INPUT_VERSION" dump "$INPUT_URL" -o "$dir/tools.json"
+          { echo "tools=$dir/tools.json"; echo "kind=url"; } >> "$GITHUB_OUTPUT"
+        else
+          npx --yes "forecall@$INPUT_VERSION" dump -o "$dir/tools.json" -- sh -c "$INPUT_COMMAND"
+          { echo "tools=$dir/tools.json"; echo "kind=command"; } >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Score
+      id: score
+      shell: bash
+      env:
+        TOOLS: ${{ steps.input.outputs.tools }}
+        DIR: ${{ steps.input.outputs.dir }}
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_LANG: ${{ inputs.lang }}
+        INPUT_FAIL_UNDER: ${{ inputs.fail-under }}
+        INPUT_MIN_TOOL_SCORE: ${{ inputs.min-tool-score }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        set -euo pipefail
+        cli="forecall@$INPUT_VERSION"
+        npx --yes "$cli" lint "$TOOLS" --json > "$DIR/report.json"
+        args=(--lang "$INPUT_LANG")
+        if [ -n "$INPUT_FAIL_UNDER" ]; then args+=(--fail-under "$INPUT_FAIL_UNDER"); fi
+        if [ -n "$INPUT_MIN_TOOL_SCORE" ]; then args+=(--min-tool-score "$INPUT_MIN_TOOL_SCORE"); fi
+        if [ -n "$INPUT_FAIL_ON" ]; then args+=(--fail-on "$INPUT_FAIL_ON"); fi
+        set +e
+        npx --yes "$cli" lint "$TOOLS" "${args[@]}"
+        gate=$?
+        set -e
+        echo "gate=$gate" >> "$GITHUB_OUTPUT"
+
+    - name: Summary
+      id: summary
+      shell: bash
+      env:
+        FORECALL_REPORT: ${{ steps.input.outputs.dir }}/report.json
+        FORECALL_KIND: ${{ steps.input.outputs.kind }}
+        FORECALL_TARGET: ${{ inputs.file || inputs.url }}
+        FORECALL_VERSION: ${{ inputs.version }}
+      run: node "$GITHUB_ACTION_PATH/action/summary.mjs"
+
+    - name: Gates
+      if: steps.score.outputs.gate != '0'
+      shell: bash
+      env:
+        GATE: ${{ steps.score.outputs.gate }}
+      run: |
+        echo "::error::A gate failed (see the Score step's log)"
+        exit "$GATE"
